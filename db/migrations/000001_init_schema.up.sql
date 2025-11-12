@@ -1,26 +1,27 @@
 CREATE TABLE IF NOT EXISTS teams(
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users(
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    team_id INT NOT NULL REFERENCES teams(id) ON DELETE RESTRICT,
+    team_id VARCHAR(50) REFERENCES teams(id) ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS pull_requests(
-    id SERIAL PRIMARY KEY,
+-- FIXME: Не сделал таблицу для статусов по причине того, что их всего два
+CREATE TABLE IF NOT EXISTS pull_requests (
+    id VARCHAR(50) PRIMARY KEY,
     name TEXT NOT NULL,
-    author_id INT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    author_id VARCHAR(50) NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     status VARCHAR(10) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'MERGED')),
     need_more_reviewers BOOLEAN NOT NULL DEFAULT TRUE,
 );
 
 CREATE TABLE IF NOT EXISTS pr_reviewers(
-    reviewer_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    pr_id INT NOT NULL REFERENCES pull_requests(id) ON DELETE CASCADE,
+    reviewer_id VARCHAR(50) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pr_id VARCHAR(50) NOT NULL REFERENCES pull_requests(id) ON DELETE CASCADE,
     PRIMARY KEY (reviewer_id, pr_id)
 );
 
