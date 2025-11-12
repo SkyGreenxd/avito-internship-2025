@@ -1,14 +1,16 @@
 package domain
 
+// TODO: изменить id на стринг и использовать UUID.
 type User struct {
-	Id       int
+	Id       string
 	Name     string
 	IsActive bool
-	TeamId   int
+	TeamId   *string
 }
 
-func NewUser(name string, isActive bool, teamId int) *User {
+func NewUser(id, name string, isActive bool, teamId *string) *User {
 	return &User{
+		Id:       id,
 		Name:     name,
 		IsActive: isActive,
 		TeamId:   teamId,

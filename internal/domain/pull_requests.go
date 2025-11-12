@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type PRStatus string
 
 const (
@@ -8,18 +10,34 @@ const (
 )
 
 type PoolRequest struct {
-	Id                int
+	Id                string
 	Name              string
-	AuthorId          int
+	AuthorId          string
 	Status            PRStatus
 	NeedMoreReviewers bool
+	CreatedAt         time.Time
+	MergedAt          *time.Time
 }
 
-func NewPoolRequest(name string, authorId int) *PoolRequest {
+type PrReviewer struct {
+	ReviewerId   string
+	PoolRequests []*PoolRequest
+}
+
+func NewPoolRequest(id, name, authorId string) *PoolRequest {
 	return &PoolRequest{
+		Id:                id,
 		Name:              name,
 		AuthorId:          authorId,
 		Status:            OPEN,
 		NeedMoreReviewers: true,
+		CreatedAt:         time.Now(),
+	}
+}
+
+func NewPrReviewer(id string, prs []*PoolRequest) *PrReviewer {
+	return &PrReviewer{
+		ReviewerId:   id,
+		PoolRequests: prs,
 	}
 }

@@ -1,12 +1,18 @@
 package domain
 
 type Team struct {
-	Id   int
+	Id   string
 	Name string
 }
 
-func NewTeam(name string) *Team {
+type TeamWithUsers struct {
+	Team  *Team
+	Users []User
+}
+
+func NewTeam(id, name string) *Team {
 	return &Team{
+		Id:   id,
 		Name: name,
 	}
 }
