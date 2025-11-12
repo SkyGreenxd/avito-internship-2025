@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"avito-internship/pkg/e"
-	"avito-internship/pkg/logger"
 	"context"
 	"os"
 	"time"
@@ -18,7 +17,7 @@ func NewPgDatabase(pool *pgxpool.Pool) *PgDatabase {
 	return &PgDatabase{Pool: pool}
 }
 
-func Connect(logger logger.Logger) (*PgDatabase, error) {
+func Connect() (*PgDatabase, error) {
 	const op = "PgDatabase.Connect"
 
 	pool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
