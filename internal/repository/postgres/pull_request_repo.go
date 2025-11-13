@@ -36,7 +36,7 @@ func (p *PullRequestsRepository) Create(ctx context.Context, pullRequest domain.
 		return domain.PullRequest{}, e.Wrap(op, err)
 	}
 
-	if err = postgresDuplicate(err, e.PRIsExists); err != nil {
+	if err = postgresDuplicate(err, e.ErrPRIsExists); err != nil {
 		return domain.PullRequest{}, e.Wrap(op, err)
 	}
 
