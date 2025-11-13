@@ -44,6 +44,10 @@ type TeamAddRes struct {
 	Team Team `json:"team"`
 }
 
+type GetTeamQueryReq struct {
+	TeamName string `json:"team_name"`
+}
+
 type SetIsActiveReq struct {
 	UserId   string `json:"user_id"`
 	IsActive bool   `json:"is_active"`
