@@ -15,6 +15,15 @@ func postgresDuplicate(err, errIsExists error) error {
 	return err
 }
 
+func postgresForeignKeyViolation(err, errNotFound error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+		return errNotFound
+	}
+
+	return err
+}
+
 func checkGetQueryResult(err, errNotFound error) error {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return errNotFound

@@ -6,18 +6,18 @@ import (
 )
 
 type UserModel struct {
-	Id       string  `db:"id"`
-	Name     string  `db:"name"`
-	IsActive bool    `db:"is_active"`
-	TeamId   *string `db:"team_id"`
+	Id       string `db:"id"`
+	Name     string `db:"name"`
+	IsActive bool   `db:"is_active"`
+	TeamId   *int   `db:"team_id"`
 }
 
 type TeamModel struct {
-	Id   string `db:"id"`
+	Id   int    `db:"id"`
 	Name string `db:"name"`
 }
 
-type PoolRequestModel struct {
+type PullRequestModel struct {
 	Id                string          `db:"id"`
 	Name              string          `db:"name"`
 	AuthorId          string          `db:"author_id"`

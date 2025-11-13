@@ -17,127 +17,126 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{Pool: pool}
 }
 
-// Update обновляет is_active и team_id пользователя.
-func (u *UserRepository) Update(ctx context.Context, user *domain.User) (*domain.User, error) {
+// UpdateIsActiveWithTeamName обновляет is_active и возвращает имя команды пользователя
+func (u *UserRepository) UpdateIsActive(ctx context.Context, userId string, isActive bool) (domain.User, error) {
 	const op = "UserRepository.Update"
 
-	model := toUserModel(user)
-
 	queryBuilder := sq.Update("users").
-		Set("is_active", model.IsActive).
-		Set("team_id", model.TeamId).
-		Where(sq.Eq{"id": model.Id}).
+		Set("is_active", isActive).
+		Where(sq.Eq{"id": userId}).
 		Suffix("RETURNING id, name, is_active, team_id")
 
 	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		return nil, e.Wrap(op, err)
+		return domain.User{}, e.Wrap(op, err)
 	}
 
-	row := u.Pool.QueryRow(ctx, query, args...)
-	if err := row.Scan(&model.Id, &model.Name, &model.IsActive, &model.TeamId); err != nil {
-		return nil, e.Wrap(op, err)
+	var updModel UserModel
+	err = u.Pool.QueryRow(ctx, query, args...).Scan(&updModel.Id, &updModel.Name, &updModel.IsActive, &updModel.TeamId)
+	if err := checkGetQueryResult(err, e.ErrUserNotFound); err != nil {
+		return domain.User{}, e.Wrap(op, err)
 	}
 
-	return toDomainUser(model), nil
+	return toDomainUser(updModel), nil
 }
 
-func (u *UserRepository) GetById(ctx context.Context, id string) (*domain.User, error) {
+func (u *UserRepository) GetById(ctx context.Context, userId string) (domain.User, error) {
 	const op = "UserRepository.GetById"
 
 	builder := sq.Select("id, name, is_active, team_id").
 		From("users").
-		Where(sq.Eq{"id": id})
+		Where(sq.Eq{"id": userId})
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		return nil, e.Wrap(op, err)
+		return domain.User{}, e.Wrap(op, err)
 	}
 
 	var model UserModel
 	err = u.Pool.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name, &model.IsActive, &model.TeamId)
 	if err := checkGetQueryResult(err, e.ErrUserNotFound); err != nil {
-		return nil, e.Wrap(op, err)
+		return domain.User{}, e.Wrap(op, err)
 	}
 
-	return toDomainUser(&model), nil
+	return toDomainUser(model), nil
 }
 
-func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId string, users []*domain.User) ([]*domain.User, error) {
-	const op = "UserRepository.AddUsersToTeam"
-
-	var userIDs []string
-	var userNames []string
-	var userActives []bool
-
-	for _, user := range users {
-		// TODO: добавить защиту что все три массива одной величины в USECASE
-		userIDs = append(userIDs, user.Id)
-		userNames = append(userNames, user.Name)
-		userActives = append(userActives, true)
-	}
-
-	tx, err := u.Pool.Begin(ctx)
-	if err != nil {
-		return nil, e.Wrap(op, err)
-	}
-	defer tx.Rollback(ctx) // TODO: мб стоит обработать ошибку
+func (u *UserRepository) GetReviewCandidates(ctx context.Context, authorId string, maxReviewers int) ([]domain.User, error) {
+	const op = "UserRepository.GetRandomReviewers"
 
 	query := `
-			INSERT INTO users (id, name, is_active, team_id)
-			SELECT
-				u.id,
-				u.name,
-				u.is_active,
-				$4 -- team_id (один для всех)
-			FROM
-				UNNEST(
-					$1::varchar[],
-					$2::varchar[],
-					$3::boolean[]
-				) AS u(id, name, is_active)
-			ON CONFLICT (id) DO UPDATE
-			SET
-				name = EXCLUDED.name,
-				is_active = EXCLUDED.is_active,
-				team_id = EXCLUDED.team_id
-			RETURNING id, name, is_active, team_id;
-	`
+       SELECT id, name, is_active, team_id
+       FROM users
+       WHERE
+           team_id = (SELECT team_id FROM users WHERE id = $1)
+           AND is_active = TRUE
+           AND id != $1
+       ORDER BY random()
+       LIMIT $2
+    `
 
-	rows, err := tx.Query(ctx, query, userIDs, userNames, userActives, teamId)
+	rows, err := u.Pool.Query(ctx, query, authorId, maxReviewers)
 	if err != nil {
-		// TODO: какие то мб еще ошибки
 		return nil, e.Wrap(op, err)
 	}
 	defer rows.Close()
 
-	updUsers := make([]*domain.User, 0, len(users))
+	var models []UserModel
 	for rows.Next() {
-		var userId string
-		var userName string
-		var userIsActive bool
-		var userTeamId *string
-		if err := rows.Scan(&userId, &userName, &userIsActive, &userTeamId); err != nil {
+		var model UserModel
+		if err := rows.Scan(&model.Id, &model.Name, &model.IsActive, &model.TeamId); err != nil {
 			return nil, e.Wrap(op, err)
 		}
 
-		updUser := domain.NewUser(userId, userName, userIsActive, userTeamId)
-		updUsers = append(updUsers, updUser)
+		models = append(models, model)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, e.Wrap(op, err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	return toArrDomainUser(models), nil
+}
+
+func (u *UserRepository) GetReassignCandidates(ctx context.Context, authorId, oldReviewerId string, maxCandidates int) ([]domain.User, error) {
+	const op = "UserRepository.GetReassignCandidates"
+
+	query := `
+		SELECT u.id, u.name, u.is_active, u.team_id
+		FROM users u
+		JOIN users a ON a.id = $1
+		WHERE u.team_id = a.team_id
+		  AND u.is_active = TRUE
+		  AND u.id != $1
+		  AND u.id != $2
+		ORDER BY random()
+		LIMIT $3
+	`
+
+	rows, err := u.Pool.Query(ctx, query, authorId, oldReviewerId, maxCandidates)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+	defer rows.Close()
+
+	var candidates []UserModel
+	for rows.Next() {
+		var m UserModel
+		if err := rows.Scan(&m.Id, &m.Name, &m.IsActive, &m.TeamId); err != nil {
+			return nil, e.Wrap(op, err)
+		}
+		candidates = append(candidates, m)
+	}
+
+	if err := rows.Err(); err != nil {
 		return nil, e.Wrap(op, err)
 	}
 
-	return updUsers, nil
+	return toArrDomainUser(candidates), nil
 }
 
-func toUserModel(u *domain.User) *UserModel {
-	return &UserModel{
+func toDomainUser(u UserModel) domain.User {
+	return domain.User{
 		Id:       u.Id,
 		Name:     u.Name,
 		IsActive: u.IsActive,
@@ -145,11 +144,11 @@ func toUserModel(u *domain.User) *UserModel {
 	}
 }
 
-func toDomainUser(u *UserModel) *domain.User {
-	return &domain.User{
-		Id:       u.Id,
-		Name:     u.Name,
-		IsActive: u.IsActive,
-		TeamId:   u.TeamId,
+func toArrDomainUser(u []UserModel) []domain.User {
+	users := make([]domain.User, 0, len(u))
+	for _, user := range u {
+		users = append(users, toDomainUser(user))
 	}
+
+	return users
 }
