@@ -33,3 +33,4 @@ go.work.sum
 
 # openapi-generator
 server
+.DS_Store
