@@ -40,43 +40,44 @@ func (p *PrReviewerRepository) AddReviewers(ctx context.Context, poolRequestId s
 	return nil
 }
 
-func (p *PrReviewerRepository) GetPRByReviewer(ctx context.Context, userId string) (*domain.PrReviewer, error) {
+func (p *PrReviewerRepository) GetPRByReviewer(ctx context.Context, userId string) ([]domain.PullRequest, error) {
 	const op = "PrReviewerRepository.GetByReviewer"
 
-	builder := sq.Select("id", "name", "author_id", "status", "need_more_reviewers", "created_at", "merged_at").
+	builder := sq.Select("id", "name", "author_id", "status",
+		"need_more_reviewers", "created_at", "merged_at").
 		From("pull_requests pr").
 		Join("pr_reviewers r ON r.pr_id = pr.id").
 		Where(sq.Eq{"reviewer_id": userId})
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		return nil, e.Wrap(op, err)
+		return []domain.PullRequest{}, e.Wrap(op, err)
 	}
 
 	rows, err := p.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, e.Wrap(op, err)
+		return []domain.PullRequest{}, e.Wrap(op, err)
 	}
 	defer rows.Close()
 
-	poolRequests := make([]*domain.PoolRequest, 0)
+	poolRequests := make([]domain.PullRequest, 0)
 	for rows.Next() {
-		var poolRequest domain.PoolRequest
+		var poolRequest domain.PullRequest
 		if err := rows.Scan(&poolRequest.Id, &poolRequest.Name, &poolRequest.AuthorId, &poolRequest.Status, &poolRequest.NeedMoreReviewers, &poolRequest.CreatedAt, &poolRequest.MergedAt); err != nil {
-			return nil, e.Wrap(op, err)
+			return []domain.PullRequest{}, e.Wrap(op, err)
 		}
 
-		poolRequests = append(poolRequests, &poolRequest)
+		poolRequests = append(poolRequests, poolRequest)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, e.Wrap(op, err)
+		return []domain.PullRequest{}, e.Wrap(op, err)
 	}
 
-	return domain.NewPrReviewer(userId, poolRequests), nil
+	return poolRequests, nil
 }
 
-func (p *PrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId string, newUserId string, poolRequestId string) error {
+func (p *PrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId string, newUserId string, poolRequestId string) (string, error) {
 	const op = "PrReviewerRepository.UpdateReviewer"
 
 	builder := sq.Update("pr_reviewers").
@@ -84,17 +85,19 @@ func (p *PrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId str
 		Where(sq.Eq{
 			"reviewer_id": oldUserId,
 			"pr_id":       poolRequestId,
-		})
+		}).
+		Suffix("RETURNING pr_id")
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		return e.Wrap(op, err)
+		return "", e.Wrap(op, err)
 	}
 
-	_, err = p.Pool.Exec(ctx, query, args...)
+	var returnedPrID string
+	err = p.Pool.QueryRow(ctx, query, args...).Scan(&returnedPrID)
 	if err != nil {
-		return e.Wrap(op, err)
+		return "", e.Wrap(op, err)
 	}
 
-	return nil
+	return returnedPrID, nil
 }
