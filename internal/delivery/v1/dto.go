@@ -71,6 +71,10 @@ type PullRequestMergeReq struct {
 	Id string `json:"pull_request_id"`
 }
 
+type PullRequestMergeRes struct {
+	PullRequest PullRequest `json:"pr"`
+}
+
 type PullRequestReassignReq struct {
 	PullRequestId string `json:"pull_request_id"`
 	OldUserId     string `json:"old_user_id"`
