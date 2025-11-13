@@ -5,10 +5,10 @@ type User struct {
 	Id       string
 	Name     string
 	IsActive bool
-	TeamId   *string
+	TeamId   *int
 }
 
-func NewUser(id, name string, isActive bool, teamId *string) *User {
+func NewUser(id, name string, isActive bool, teamId *int) *User {
 	return &User{
 		Id:       id,
 		Name:     name,
