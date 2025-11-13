@@ -31,8 +31,9 @@ func (p *PullRequestsRepository) Create(ctx context.Context, poolRequest *domain
 		return nil, e.Wrap(op, err)
 	}
 
-	err = p.Pool.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name, &model.AuthorId, &model.Status, &model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt)
-	if err = postgresDuplicate(err, e.PRIsExists); err != nil {
+	err = p.Pool.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name, &model.AuthorId, &model.Status,
+		&model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt)
+	if err = postgresDuplicate(err, e.ErrPRIsExists); err != nil {
 		return nil, e.Wrap(op, err)
 	}
 
@@ -54,7 +55,8 @@ func (p *PullRequestsRepository) Update(ctx context.Context, poolRequest *domain
 	}
 
 	row := p.Pool.QueryRow(ctx, query, args...)
-	if err := row.Scan(&model.Id, &model.Name, &model.AuthorId, &model.Status, &model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt); err != nil {
+	if err := checkGetQueryResult(row.Scan(&model.Id, &model.Name, &model.AuthorId, &model.Status,
+		&model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt), e.ErrPRNotFound); err != nil {
 		return nil, e.Wrap(op, err)
 	}
 
