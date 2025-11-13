@@ -9,7 +9,7 @@ const (
 	MERGED PRStatus = "MERGED"
 )
 
-type PoolRequest struct {
+type PullRequest struct {
 	Id                string
 	Name              string
 	AuthorId          string
@@ -19,25 +19,13 @@ type PoolRequest struct {
 	MergedAt          *time.Time
 }
 
-type PrReviewer struct {
-	ReviewerId   string
-	PoolRequests []*PoolRequest
-}
-
-func NewPoolRequest(id, name, authorId string) *PoolRequest {
-	return &PoolRequest{
+func NewPoolRequest(id, name, authorId string) *PullRequest {
+	return &PullRequest{
 		Id:                id,
 		Name:              name,
 		AuthorId:          authorId,
 		Status:            OPEN,
 		NeedMoreReviewers: true,
 		CreatedAt:         time.Now(),
-	}
-}
-
-func NewPrReviewer(id string, prs []*PoolRequest) *PrReviewer {
-	return &PrReviewer{
-		ReviewerId:   id,
-		PoolRequests: prs,
 	}
 }
