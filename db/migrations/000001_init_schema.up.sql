@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS teams(
-    id VARCHAR(50) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
@@ -7,15 +7,17 @@ CREATE TABLE IF NOT EXISTS users(
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    team_id VARCHAR(50) REFERENCES teams(id) ON DELETE RESTRICT
+    team_id INT REFERENCES teams(id) ON DELETE RESTRICT
 );
+
+CREATE TYPE pr_status AS ENUM ('OPEN', 'MERGED');
 
 -- FIXME: Не сделал таблицу для статусов по причине того, что их всего два
 CREATE TABLE IF NOT EXISTS pull_requests (
     id VARCHAR(50) PRIMARY KEY,
     name TEXT NOT NULL,
     author_id VARCHAR(50) NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    status VARCHAR(10) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'MERGED')),
+    status pr_status NOT NULL DEFAULT 'OPEN',
     need_more_reviewers BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     merged_at TIMESTAMPTZ
