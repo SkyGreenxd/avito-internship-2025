@@ -1,4 +1,4 @@
-package postgres
+package pgdb
 
 import (
 	"avito-internship/internal/domain"

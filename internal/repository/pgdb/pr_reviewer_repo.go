@@ -1,7 +1,8 @@
-package postgres
+package pgdb
 
 import (
 	"avito-internship/internal/domain"
+	r "avito-internship/internal/repository"
 	"avito-internship/pkg/e"
 	"context"
 
@@ -40,41 +41,65 @@ func (p *PrReviewerRepository) AddReviewers(ctx context.Context, poolRequestId s
 	return nil
 }
 
-func (p *PrReviewerRepository) GetPRByReviewer(ctx context.Context, userId string) ([]domain.PullRequest, error) {
+func (p *PrReviewerRepository) GetPRByReviewer(ctx context.Context, userId string) (r.GetPRByReviewerDTO, error) {
 	const op = "PrReviewerRepository.GetByReviewer"
 
-	builder := sq.Select("id", "name", "author_id", "status",
-		"need_more_reviewers", "created_at", "merged_at").
+	builder := sq.Select(
+		"pr.id",
+		"pr.name",
+		"pr.author_id",
+		"pr.status_id",
+		"pr.need_more_reviewers",
+		"pr.created_at",
+		"pr.merged_at",
+		"s.name AS status_name",
+	).
 		From("pull_requests pr").
 		Join("pr_reviewers r ON r.pr_id = pr.id").
-		Where(sq.Eq{"reviewer_id": userId})
+		Join("statuses s ON s.id = pr.status_id").
+		Where(sq.Eq{"r.reviewer_id": userId})
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		return []domain.PullRequest{}, e.Wrap(op, err)
+		return r.GetPRByReviewerDTO{}, e.Wrap(op, err)
 	}
 
 	rows, err := p.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return []domain.PullRequest{}, e.Wrap(op, err)
+		return r.GetPRByReviewerDTO{}, e.Wrap(op, err)
 	}
 	defer rows.Close()
 
-	poolRequests := make([]domain.PullRequest, 0)
+	pullRequests := make([]domain.PullRequest, 0)
+	statusNames := make([]domain.PRStatus, 0)
+
 	for rows.Next() {
-		var poolRequest domain.PullRequest
-		if err := rows.Scan(&poolRequest.Id, &poolRequest.Name, &poolRequest.AuthorId, &poolRequest.Status, &poolRequest.NeedMoreReviewers, &poolRequest.CreatedAt, &poolRequest.MergedAt); err != nil {
-			return []domain.PullRequest{}, e.Wrap(op, err)
+		var (
+			pullRequest domain.PullRequest
+			statusName  domain.PRStatus
+		)
+		if err := rows.Scan(
+			&pullRequest.Id,
+			&pullRequest.Name,
+			&pullRequest.AuthorId,
+			&pullRequest.StatusId,
+			&pullRequest.NeedMoreReviewers,
+			&pullRequest.CreatedAt,
+			&pullRequest.MergedAt,
+			&statusName,
+		); err != nil {
+			return r.GetPRByReviewerDTO{}, e.Wrap(op, err)
 		}
 
-		poolRequests = append(poolRequests, poolRequest)
+		pullRequests = append(pullRequests, pullRequest)
+		statusNames = append(statusNames, statusName)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []domain.PullRequest{}, e.Wrap(op, err)
+		return r.GetPRByReviewerDTO{}, e.Wrap(op, err)
 	}
 
-	return poolRequests, nil
+	return r.NewGetPRByReviewerDTO(pullRequests, statusNames), nil
 }
 
 func (p *PrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId string, newUserId string, poolRequestId string) (string, error) {
