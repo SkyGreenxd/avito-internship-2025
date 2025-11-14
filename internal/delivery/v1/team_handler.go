@@ -8,19 +8,19 @@ import (
 )
 
 func (h *Handler) addTeam(c *gin.Context) {
-	var team Team
+	var team TeamAddReq
 	if err := c.ShouldBindJSON(&team); err != nil {
 		c.Error(e.ErrInvalidRequestBody)
 		return
 	}
 
-	res, err := h.AddTeam(c.Request.Context(), toUseCaseAddTeamRes(team))
+	res, err := h.teamUC.AddTeam(c.Request.Context(), toUseCaseTeamAddReq(team))
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, toDeliveryAddTeamRes(res))
+	c.JSON(http.StatusCreated, toDeliveryTeamAddRes(res))
 }
 
 func (h *Handler) getTeam(c *gin.Context) {
@@ -30,7 +30,7 @@ func (h *Handler) getTeam(c *gin.Context) {
 		return
 	}
 
-	res, err := h.GetTeam(c.Request.Context(), req.TeamName)
+	res, err := h.teamUC.GetTeam(c.Request.Context(), req.TeamName)
 	if err != nil {
 		c.Error(err)
 		return

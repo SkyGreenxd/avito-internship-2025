@@ -14,13 +14,13 @@ func (h *Handler) pullRequestCreate(c *gin.Context) {
 		return
 	}
 
-	res, err := h.PullRequestCreate(c.Request.Context(), toUseCasePullRequestCreate(req))
+	res, err := h.prUC.PullRequestCreate(c.Request.Context(), toUseCaseCreatePullRequestReq(req))
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, toDeliveryPullRequestCreate(res))
+	c.JSON(http.StatusCreated, toDeliveryCreatePullRequestRes(res))
 }
 
 func (h *Handler) pullRequestMerge(c *gin.Context) {
@@ -30,13 +30,13 @@ func (h *Handler) pullRequestMerge(c *gin.Context) {
 		return
 	}
 
-	res, err := h.PullRequestMerge(c.Request.Context(), toUseCasePullRequestMerge(req))
+	res, err := h.prUC.PullRequestMerge(c.Request.Context(), toUseCasePullRequestMergeReq(req))
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, toDeliveryPullRequestMerge(res))
+	c.JSON(http.StatusOK, toDeliveryPullRequestMergeRes(res))
 }
 
 func (h *Handler) reviewerReassign(c *gin.Context) {
@@ -46,11 +46,11 @@ func (h *Handler) reviewerReassign(c *gin.Context) {
 		return
 	}
 
-	res, err := h.ReviewerReassign(c.Request.Context(), toUseCaseReviewerReassignReq(req))
+	res, err := h.prUC.ReviewerReassign(c.Request.Context(), toUseCasePullRequestReassignReq(req))
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, toDeliveryReviewerReassignRes(res))
+	c.JSON(http.StatusOK, toDeliveryPullRequestReassignRes(res))
 }

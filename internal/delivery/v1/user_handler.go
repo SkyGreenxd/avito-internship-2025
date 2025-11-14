@@ -14,7 +14,7 @@ func (h *Handler) setIsActive(c *gin.Context) {
 		return
 	}
 
-	res, err := h.SetIsActive(c.Request.Context(), toUseCaseSetIsActiveReq(req))
+	res, err := h.userUC.SetIsActive(c.Request.Context(), toUseCaseSetIsActiveReq(req))
 	if err != nil {
 		c.Error(err)
 		return
@@ -30,7 +30,7 @@ func (h *Handler) getReview(c *gin.Context) {
 		return
 	}
 
-	res, err := h.GetReview(c.Request.Context(), req.UserID)
+	res, err := h.userUC.GetReview(c.Request.Context(), req.UserID)
 	if err != nil {
 		c.Error(err)
 		return
