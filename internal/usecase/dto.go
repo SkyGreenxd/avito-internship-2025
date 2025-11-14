@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"avito-internship/internal/domain"
+	r "avito-internship/internal/repository"
 	"time"
 )
 
@@ -40,12 +41,22 @@ type PullRequestShort struct {
 	Status   domain.PRStatus
 }
 
+type TeamAddReq struct {
+	TeamName string
+	Members  []TeamMemberDTO
+}
+
 type TeamAddRes struct {
 	Team TeamDTO
 }
 
 type GetTeamQueryReq struct {
 	TeamName string
+}
+
+type GetTeamRes struct {
+	TeamName string
+	Members  []TeamMemberDTO
 }
 
 type SetIsActiveReq struct {
@@ -105,28 +116,31 @@ func NewSetIsActiveRes(id, username, teamName string, isActive bool) SetIsActive
 	}
 }
 
-func NewGetReviewRes(userId string, prs []domain.PullRequest) GetReviewRes {
+func NewGetReviewRes(userId string, prs r.GetPRByReviewerDTO) GetReviewRes {
 	return GetReviewRes{
 		UserId:       userId,
 		PullRequests: toArrPullRequestShort(prs),
 	}
 }
 
-func toArrPullRequestShort(prs []domain.PullRequest) []PullRequestShort {
-	result := make([]PullRequestShort, 0, len(prs))
-	for _, pr := range prs {
-		result = append(result, toPullRequestShort(pr))
+func toArrPullRequestShort(prs r.GetPRByReviewerDTO) []PullRequestShort {
+	result := make([]PullRequestShort, 0, len(prs.Prs))
+
+	for _, dto := range prs.Prs {
+		result = append(result, toPullRequestShort(dto.Pr, dto.StatusName))
+
 	}
 
 	return result
 }
 
-func toPullRequestShort(pr domain.PullRequest) PullRequestShort {
+// TODO: переделать
+func toPullRequestShort(pr domain.PullRequest, statusName domain.PRStatus) PullRequestShort {
 	return PullRequestShort{
 		Id:       pr.Id,
 		Name:     pr.Name,
 		AuthorId: pr.AuthorId,
-		Status:   pr.Status,
+		Status:   statusName,
 	}
 }
 
@@ -168,7 +182,7 @@ func NewTeamDTO(teamName string, u []domain.User) TeamDTO {
 	}
 }
 
-func NewPullRequestDTO(pr domain.PullRequest, reviewers []string) PullRequestDTO {
+func NewPullRequestDTO(pr domain.PullRequest, reviewers []string, statusName domain.PRStatus) PullRequestDTO {
 	createdAt := pr.CreatedAt.Format(time.RFC3339)
 	var mergedAt *string
 	if pr.MergedAt != nil {
@@ -180,7 +194,7 @@ func NewPullRequestDTO(pr domain.PullRequest, reviewers []string) PullRequestDTO
 		Id:                pr.Id,
 		Name:              pr.Name,
 		AuthorId:          pr.AuthorId,
-		Status:            pr.Status,
+		Status:            statusName,
 		AssignedReviewers: reviewers,
 		CreatedAt:         &createdAt,
 		MergedAt:          mergedAt,
@@ -205,5 +219,12 @@ func NewPullRequestReassignRes(pr PullRequestDTO, replacedBy string) PullRequest
 func NewPullRequestMergeRes(pr PullRequestDTO) PullRequestMergeRes {
 	return PullRequestMergeRes{
 		PullRequest: pr,
+	}
+}
+
+func NewGetTeamRes(teamDTO TeamDTO) GetTeamRes {
+	return GetTeamRes{
+		TeamName: teamDTO.TeamName,
+		Members:  teamDTO.Members,
 	}
 }

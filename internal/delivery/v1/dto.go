@@ -5,31 +5,31 @@ import (
 )
 
 // TODO: добавить валидацию
-type TeamMember struct {
+type TeamMemberDTO struct {
 	Id       string `json:"user_id"`
 	Username string `json:"username"`
 	IsActive bool   `json:"is_active"`
 }
 
-type Team struct {
-	TeamName string       `json:"team_name"`
-	Members  []TeamMember `json:"members"`
+type TeamDTO struct {
+	TeamName string          `json:"team_name"`
+	Members  []TeamMemberDTO `json:"members"`
 }
 
-type User struct {
+type UserDTO struct {
 	Id       string `json:"user_id"`
 	Username string `json:"username"`
 	TeamName string `json:"team_name"`
 	IsActive bool   `json:"is_active"`
 }
 
-type PullRequest struct {
+type PullRequestDTO struct {
 	Id                string          `json:"pull_request_id"`
 	Name              string          `json:"pull_request_name"`
 	AuthorId          string          `json:"author_id"`
 	Status            domain.PRStatus `json:"status"`
 	AssignedReviewers []string        `json:"assigned_reviewers"`
-	CreatedAt         string          `json:"createdAt"` // time.Time
+	CreatedAt         *string         `json:"createdAt"` // time.Time
 	MergedAt          *string         `json:"mergedAt"`  // time.Time
 }
 
@@ -40,12 +40,22 @@ type PullRequestShort struct {
 	Status   domain.PRStatus `json:"status"`
 }
 
+type TeamAddReq struct {
+	TeamName string          `json:"team_name"`
+	Members  []TeamMemberDTO `json:"members"`
+}
+
 type TeamAddRes struct {
-	Team Team `json:"team"`
+	Team TeamDTO `json:"team"`
 }
 
 type GetTeamQueryReq struct {
 	TeamName string `json:"team_name"`
+}
+
+type GetTeamRes struct {
+	TeamName string          `json:"team_name"`
+	Members  []TeamMemberDTO `json:"members"`
 }
 
 type SetIsActiveReq struct {
@@ -54,7 +64,7 @@ type SetIsActiveReq struct {
 }
 
 type SetIsActiveRes struct {
-	User User `json:"user"`
+	User UserDTO `json:"user"`
 }
 
 type CreatePullRequestReq struct {
@@ -64,7 +74,7 @@ type CreatePullRequestReq struct {
 }
 
 type CreatePullRequestRes struct {
-	PullRequest PullRequest `json:"pr"`
+	PullRequest PullRequestDTO `json:"pr"`
 }
 
 type PullRequestMergeReq struct {
@@ -72,7 +82,7 @@ type PullRequestMergeReq struct {
 }
 
 type PullRequestMergeRes struct {
-	PullRequest PullRequest `json:"pr"`
+	PullRequest PullRequestDTO `json:"pr"`
 }
 
 type PullRequestReassignReq struct {
@@ -81,8 +91,8 @@ type PullRequestReassignReq struct {
 }
 
 type PullRequestReassignRes struct {
-	Pr         PullRequest `json:"pr"`
-	ReplacedBy string      `json:"replaced_by"` // айди нового ревьюера
+	Pr         PullRequestDTO `json:"pr"`
+	ReplacedBy string         `json:"replaced_by"` // айди нового ревьюера
 }
 
 type GetReviewQueryReq struct {
