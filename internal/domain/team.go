@@ -5,8 +5,8 @@ type Team struct {
 	Name string
 }
 
-func NewTeam(name string) *Team {
-	return &Team{
+func NewTeam(name string) Team {
+	return Team{
 		Name: name,
 	}
 }
