@@ -12,8 +12,8 @@ type UserUseCase struct {
 	teamRepo     r.TeamRepository
 }
 
-func NewUserUseCase(reviewerRepo r.PrReviewerRepository, userRepo r.UserRepository, teamRepo r.TeamRepository) UserUseCase {
-	return UserUseCase{
+func NewUserUseCase(reviewerRepo r.PrReviewerRepository, userRepo r.UserRepository, teamRepo r.TeamRepository) *UserUseCase {
+	return &UserUseCase{
 		reviewerRepo: reviewerRepo,
 		userRepo:     userRepo,
 		teamRepo:     teamRepo,
@@ -41,10 +41,10 @@ func (u *UserUseCase) SetIsActive(ctx context.Context, req SetIsActiveReq) (SetI
 func (u *UserUseCase) GetReview(ctx context.Context, userId string) (GetReviewRes, error) {
 	const op = "UserUseCase.GetReview"
 
-	prs, err := u.reviewerRepo.GetPRByReviewer(ctx, userId)
+	dto, err := u.reviewerRepo.GetPRByReviewer(ctx, userId)
 	if err != nil {
 		return GetReviewRes{}, e.Wrap(op, err)
 	}
 
-	return NewGetReviewRes(userId, prs), nil
+	return NewGetReviewRes(userId, dto), nil
 }
