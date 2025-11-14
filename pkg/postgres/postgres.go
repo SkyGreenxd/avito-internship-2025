@@ -79,6 +79,6 @@ func (db *PgDatabase) RunMigrations(logger logger.Logger) error {
 		return e.Wrap(op, err)
 	}
 
-	logger.Info("migrations applied successfully")
+	logger.Infof("migrations applied successfully")
 	return nil
 }

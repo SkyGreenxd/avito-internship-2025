@@ -28,11 +28,7 @@ func (m *Middleware) AdminMiddleware() gin.HandlerFunc {
 		token := strings.TrimPrefix(authHeader, prefix)
 
 		if !strings.HasPrefix(authHeader, prefix) || token != m.adminToken {
-			m.logger.Error(e.ErrUnauthorized, "",
-				"method", c.Request.Method,
-				"path", c.Request.URL.Path,
-			)
-
+			m.logger.Errorf(e.ErrUnauthorized, "method=%s path=%s", c.Request.Method, c.Request.URL.Path)
 			abortUnauthorized(c)
 			return
 		}
@@ -48,10 +44,7 @@ func (m *Middleware) ErrorMiddleware() gin.HandlerFunc {
 		for _, ginErr := range c.Errors {
 			err := ginErr.Err
 
-			m.logger.Error(err, "",
-				"method", c.Request.Method,
-				"path", c.Request.URL.Path,
-			)
+			m.logger.Errorf(err, "method=%s path=%s", c.Request.Method, c.Request.URL.Path)
 
 			codeInt, codeString, msg := ToHTTPResponse(err)
 			response := NewErrorResponse(codeString, msg)
