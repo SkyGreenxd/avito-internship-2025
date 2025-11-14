@@ -1,6 +1,5 @@
 package domain
 
-// TODO: изменить id на стринг и использовать UUID.
 type User struct {
 	Id       string
 	Name     string
