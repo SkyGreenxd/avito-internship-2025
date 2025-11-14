@@ -15,17 +15,17 @@ const (
 type PullRequestUseCase struct {
 	prRepo       r.PullRequestRepository
 	reviewerRepo r.PrReviewerRepository
-	teamRepo     r.TeamRepository
 	userRepo     r.UserRepository
+	statusRepo   r.StatusRepository
 }
 
 func NewPullRequestUseCase(prRepo r.PullRequestRepository, reviewerRepo r.PrReviewerRepository,
-	teamRepo r.TeamRepository, userRepo r.UserRepository) *PullRequestUseCase {
+	userRepo r.UserRepository, statusRepo r.StatusRepository) *PullRequestUseCase {
 	return &PullRequestUseCase{
 		prRepo:       prRepo,
 		reviewerRepo: reviewerRepo,
-		teamRepo:     teamRepo,
 		userRepo:     userRepo,
+		statusRepo:   statusRepo,
 	}
 }
 
@@ -33,7 +33,12 @@ func NewPullRequestUseCase(prRepo r.PullRequestRepository, reviewerRepo r.PrRevi
 func (p *PullRequestUseCase) PullRequestCreate(ctx context.Context, req CreatePullRequestReq) (CreatePullRequestRes, error) {
 	const op = "PullRequestUseCase.PullRequestCreate"
 
-	pr := domain.NewPoolRequest(req.Id, req.Name, req.AuthorId)
+	status, err := p.statusRepo.GetByName(ctx, string(domain.OPEN))
+	if err != nil {
+		return CreatePullRequestRes{}, e.Wrap(op, err)
+	}
+
+	pr := domain.NewPoolRequest(req.Id, req.Name, req.AuthorId, status.Id)
 	newPr, err := p.prRepo.Create(ctx, *pr)
 	if err != nil {
 		return CreatePullRequestRes{}, e.Wrap(op, err)
@@ -56,51 +61,50 @@ func (p *PullRequestUseCase) PullRequestCreate(ctx context.Context, req CreatePu
 		}
 	}
 
-	prDTO := NewPullRequestDTO(*pr, reviewersIds)
+	prDTO := NewPullRequestDTO(*pr, reviewersIds, status.Name)
 	return NewCreatePullRequestRes(prDTO), nil
 }
 
-// prRepo update
 func (p *PullRequestUseCase) PullRequestMerge(ctx context.Context, req PullRequestMergeReq) (PullRequestMergeRes, error) {
 	const op = "PullRequestUseCase.PullRequestMerge"
 
-	updPr, reviewersIds, err := p.prRepo.SetMergedStatus(ctx, req.Id)
+	status, err := p.statusRepo.GetByName(ctx, string(domain.MERGED))
 	if err != nil {
 		return PullRequestMergeRes{}, e.Wrap(op, err)
 	}
 
-	prDTO := NewPullRequestDTO(updPr, reviewersIds)
+	dto, err := p.prRepo.SetMergedStatus(ctx, status.Id, req.Id)
+	if err != nil {
+		return PullRequestMergeRes{}, e.Wrap(op, err)
+	}
+
+	prDTO := NewPullRequestDTO(dto.Pr, dto.ReviewersIds, status.Name)
 	return NewPullRequestMergeRes(prDTO), nil
 }
 
-// reviewerRepo UpdateReviewer
 func (p *PullRequestUseCase) ReviewerReassign(ctx context.Context, req PullRequestReassignReq) (PullRequestReassignRes, error) {
 	const op = "PullRequestUseCase.PullRequestReassign"
 
-	// пользователя нет
 	_, err := p.userRepo.GetById(ctx, req.OldUserId)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
 
-	// pr нет
-	pr, reviewersIds, err := p.prRepo.GetByPrIdWithReviewersIds(ctx, req.PullRequestId)
+	dto, err := p.prRepo.GetByPrIdWithReviewersIds(ctx, req.PullRequestId)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
 
-	oldReviewerIndex := slices.Index(reviewersIds, req.OldUserId)
+	oldReviewerIndex := slices.Index(dto.ReviewersIds, req.OldUserId)
 	if oldReviewerIndex == -1 {
 		return PullRequestReassignRes{}, e.Wrap(op, e.ErrPrReviewerNotAssigned)
 	}
 
-	// status == merged
-	if pr.Status == domain.MERGED {
+	if dto.StatusName == domain.MERGED {
 		return PullRequestReassignRes{}, e.Wrap(op, e.ErrPrMerged)
 	}
 
-	//нет доступных кандидатов
-	candidates, err := p.userRepo.GetReassignCandidates(ctx, pr.AuthorId, req.OldUserId, maxReviewers)
+	candidates, err := p.userRepo.GetReassignCandidates(ctx, dto.Pr.AuthorId, req.OldUserId, maxReviewers)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
@@ -114,12 +118,12 @@ func (p *PullRequestUseCase) ReviewerReassign(ctx context.Context, req PullReque
 		candidatesIds[i] = candidates[i].Id
 	}
 
-	newReviewerId, err := p.reviewerRepo.UpdateReviewer(ctx, req.OldUserId, candidatesIds[0], pr.Id)
+	newReviewerId, err := p.reviewerRepo.UpdateReviewer(ctx, req.OldUserId, candidatesIds[0], dto.Pr.Id)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
 
-	prDTO := NewPullRequestDTO(pr, reviewersIds)
+	prDTO := NewPullRequestDTO(dto.Pr, dto.ReviewersIds, dto.StatusName)
 	prDTO.AssignedReviewers[oldReviewerIndex] = newReviewerId
 
 	return NewPullRequestReassignRes(prDTO, newReviewerId), nil
