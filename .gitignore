@@ -32,5 +32,5 @@ go.work.sum
 # .vscode/
 
 # openapi-generator
-server
+openapi.yaml
 .DS_Store
