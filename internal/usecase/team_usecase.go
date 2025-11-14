@@ -20,6 +20,11 @@ func NewTeamUseCase(teamRepo r.TeamRepository) *TeamUseCase {
 // AddTeam создает новую команду с участниками
 func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, error) {
 	const op = "TeamUseCase.AddTeam"
+
+	if len(req.Members) == 0 {
+		return TeamAddRes{}, e.Wrap(op, e.ErrEmptyMembers)
+	}
+
 	team := domain.NewTeam(req.TeamName)
 	newTeam, err := t.teamRepo.Create(ctx, team)
 	if err != nil {
