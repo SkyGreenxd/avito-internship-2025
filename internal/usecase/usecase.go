@@ -8,8 +8,8 @@ type UserUC interface {
 }
 
 type TeamUC interface {
-	AddTeam(ctx context.Context, req TeamDTO) (TeamAddRes, error)
-	GetTeam(ctx context.Context, teamName string) (TeamDTO, error)
+	AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, error)
+	GetTeam(ctx context.Context, teamName string) (GetTeamRes, error)
 }
 
 type PullRequestUC interface {
