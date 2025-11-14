@@ -17,6 +17,10 @@ var (
 	ErrPrReviewerNotAssigned = fmt.Errorf("reviewer is not assigned to this PR")
 	ErrPrNoCandidate         = fmt.Errorf("no active replacement candidate in team")
 
+	// Ошибки со статусом
+	ErrStatusNotFound = fmt.Errorf("status not found")
+	ErrInvalidStatus  = fmt.Errorf("invalid status")
+
 	// Ошибки пользователя
 	ErrInvalidRequestBody = fmt.Errorf("invalid request body")
 	ErrResourceNotFound   = fmt.Errorf("resource not found")

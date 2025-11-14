@@ -29,6 +29,7 @@ func ToHTTPResponse(err error) (int, string, string) {
 	case errors.Is(err, e.ErrUserNotFound),
 		errors.Is(err, e.ErrTeamNotFound),
 		errors.Is(err, e.ErrUnauthorized),
+		errors.Is(err, e.ErrStatusNotFound),
 		errors.Is(err, e.ErrPRNotFound):
 		return http.StatusNotFound, e.NOT_FOUND, e.ErrResourceNotFound.Error()
 	case errors.Is(err, e.ErrTeamIsExists):
