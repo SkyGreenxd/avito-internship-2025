@@ -37,21 +37,18 @@ func (l *SlogLogger) Debugf(format string, args ...any) {
 }
 
 // Track выполняет переданную функцию, которая может вернуть ошибку,
-// замеряет время ее выполнения и логирует результат.
+// замеряет время выполнения и логирует результат.
 func (l *SlogLogger) Track(operationName string, operation func() error) error {
 	start := time.Now()
 
-	// Выполняем переданную операцию и получаем ошибку, если она есть
 	err := operation()
 
-	// Логируем результат в любом случае
-	l.Info(
-		"Operation finished",
-		"operation", operationName,
-		"duration", time.Since(start).String(),
-		"error", err, // slog элегантно обработает nil, если ошибки не было
+	l.Infof(
+		"Operation finished: operation=%s, duration=%s, error=%v",
+		operationName,
+		time.Since(start),
+		err,
 	)
 
-	// Возвращаем ошибку, если она была, чтобы вызывающий код мог ее обработать
 	return err
 }
