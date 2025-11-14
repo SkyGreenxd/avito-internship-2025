@@ -42,6 +42,8 @@ func ToHTTPResponse(err error) (int, string, string) {
 		return http.StatusConflict, e.NOT_ASSIGNED, e.ErrPrReviewerNotAssigned.Error()
 	case errors.Is(err, e.ErrPrNoCandidate):
 		return http.StatusConflict, e.NO_CANDIDATE, e.ErrPrNoCandidate.Error()
+	case errors.Is(err, e.ErrEmptyMembers):
+		return http.StatusBadRequest, e.BAD_REQUEST, e.ErrEmptyMembers.Error()
 	default:
 		return http.StatusInternalServerError, e.SERVER_ERR, e.ErrInternalServerError.Error()
 	}

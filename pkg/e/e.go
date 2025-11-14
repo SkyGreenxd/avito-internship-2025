@@ -25,6 +25,7 @@ var (
 	ErrInvalidRequestBody = fmt.Errorf("invalid request body")
 	ErrResourceNotFound   = fmt.Errorf("resource not found")
 	ErrUnauthorized       = fmt.Errorf("unauthorized")
+	ErrEmptyMembers       = fmt.Errorf("member list is empty")
 
 	// Ошибки сервера
 	ErrInternalServerError = fmt.Errorf("internal server error")
@@ -38,6 +39,7 @@ const (
 	NOT_ASSIGNED = "NOT_ASSIGNED" // TODO: ошибка возникает, когда пытаются переназначить кого-то, кто не назначен на этот PR.
 	NO_CANDIDATE = "NO_CANDIDATE" // TODO: когда нет активных пользователей в команде для замены ревьювера
 	SERVER_ERR   = "SERVER_ERR"
+	BAD_REQUEST  = "BAD_REQUEST"
 )
 
 func Wrap(msg string, err error) error {
