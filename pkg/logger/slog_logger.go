@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -19,21 +20,20 @@ func NewSlogLogger() *SlogLogger {
 	}
 }
 
-func (l *SlogLogger) Info(msg string, args ...any) {
-	l.logger.Info(msg, args...)
+func (l *SlogLogger) Infof(format string, args ...any) {
+	l.logger.Info(fmt.Sprintf(format, args...))
 }
 
-func (l *SlogLogger) Warn(msg string, args ...any) {
-	l.logger.Warn(msg, args...)
+func (l *SlogLogger) Warnf(format string, args ...any) {
+	l.logger.Warn(fmt.Sprintf(format, args...))
 }
 
-func (l *SlogLogger) Error(err error, msg string, args ...any) {
-	args = append(args, "error", err)
-	l.logger.Error(msg, args...)
+func (l *SlogLogger) Errorf(err error, format string, args ...any) {
+	l.logger.Error(fmt.Sprintf(format, args...), slog.Any("err", err))
 }
 
-func (l *SlogLogger) Debug(msg string, args ...any) {
-	l.logger.Debug(msg, args...)
+func (l *SlogLogger) Debugf(format string, args ...any) {
+	l.logger.Debug(fmt.Sprintf(format, args...))
 }
 
 // Track выполняет переданную функцию, которая может вернуть ошибку,
