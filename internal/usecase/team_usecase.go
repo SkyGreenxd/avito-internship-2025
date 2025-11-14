@@ -18,11 +18,10 @@ func NewTeamUseCase(teamRepo r.TeamRepository) *TeamUseCase {
 }
 
 // AddTeam создает новую команду с участниками
-func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamDTO) (TeamAddRes, error) {
+func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, error) {
 	const op = "TeamUseCase.AddTeam"
-
 	team := domain.NewTeam(req.TeamName)
-	newTeam, err := t.teamRepo.Create(ctx, *team)
+	newTeam, err := t.teamRepo.Create(ctx, team)
 	if err != nil {
 		return TeamAddRes{}, e.Wrap(op, err)
 	}
@@ -42,14 +41,14 @@ func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamDTO) (TeamAddRes, err
 }
 
 // GetTeam возвращает команду с ее участниками
-func (t *TeamUseCase) GetTeam(ctx context.Context, teamName string) (TeamDTO, error) {
+func (t *TeamUseCase) GetTeam(ctx context.Context, teamName string) (GetTeamRes, error) {
 	const op = "TeamUseCase.GetTeam"
 
 	members, err := t.teamRepo.GetMembersByTeamNameWithUsers(ctx, teamName)
 	if err != nil {
-		return TeamDTO{}, e.Wrap(op, err)
+		return GetTeamRes{}, e.Wrap(op, err)
 	}
 
 	teamDTO := NewTeamDTO(teamName, members)
-	return teamDTO, nil
+	return NewGetTeamRes(teamDTO), nil
 }
