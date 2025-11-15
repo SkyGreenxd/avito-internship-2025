@@ -9,7 +9,7 @@ type UserModel struct {
 	Id       string `db:"id"`
 	Name     string `db:"name"`
 	IsActive bool   `db:"is_active"`
-	TeamId   *int   `db:"team_id"`
+	TeamId   int    `db:"team_id"`
 }
 
 type TeamModel struct {

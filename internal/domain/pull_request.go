@@ -12,13 +12,13 @@ type PullRequest struct {
 	MergedAt          *time.Time
 }
 
-func NewPoolRequest(id, name, authorId string, statusId int) *PullRequest {
+func NewPoolRequest(id, name, authorId string, statusId int, needMoreReviewers bool, createdAt time.Time) *PullRequest {
 	return &PullRequest{
 		Id:                id,
 		Name:              name,
 		AuthorId:          authorId,
 		StatusId:          statusId,
-		NeedMoreReviewers: true,
-		CreatedAt:         time.Now(),
+		NeedMoreReviewers: needMoreReviewers,
+		CreatedAt:         createdAt,
 	}
 }
