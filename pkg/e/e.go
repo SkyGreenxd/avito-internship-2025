@@ -29,6 +29,9 @@ var (
 
 	// Ошибки сервера
 	ErrInternalServerError = fmt.Errorf("internal server error")
+
+	// Ошибки с валидацией
+	ErrValidatorFailed = fmt.Errorf("validator failed")
 )
 
 const (
