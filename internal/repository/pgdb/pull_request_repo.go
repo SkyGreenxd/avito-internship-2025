@@ -33,11 +33,9 @@ func (p *PullRequestsRepository) Create(ctx context.Context, pullRequest domain.
 	}
 
 	err = p.Pool.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name, &model.AuthorId, &model.StatusId, &model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt)
-	if err := postgresForeignKeyViolation(err, e.ErrUserNotFound); err != nil {
-		return domain.PullRequest{}, e.Wrap(op, err)
-	}
-
-	if err = postgresDuplicate(err, e.ErrPRIsExists); err != nil {
+	err = postgresDuplicate(err, e.ErrPRIsExists)
+	err = postgresForeignKeyViolation(err, e.ErrUserNotFound)
+	if err != nil {
 		return domain.PullRequest{}, e.Wrap(op, err)
 	}
 
