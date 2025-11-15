@@ -1,0 +1,41 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: avito-internship-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - avito-internship-2025
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  app:
+    build:
+      context: .
+    container_name: go_backend
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - avito-internship-2025
+    restart: unless-stopped
+
+networks:
+  avito-internship-2025:
+    driver: bridge
+
+volumes:
+  postgres_data:
