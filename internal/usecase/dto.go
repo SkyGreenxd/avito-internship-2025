@@ -223,8 +223,5 @@ func NewPullRequestMergeRes(pr PullRequestDTO) PullRequestMergeRes {
 }
 
 func NewGetTeamRes(teamDTO TeamDTO) GetTeamRes {
-	return GetTeamRes{
-		TeamName: teamDTO.TeamName,
-		Members:  teamDTO.Members,
-	}
+	return GetTeamRes(teamDTO)
 }
