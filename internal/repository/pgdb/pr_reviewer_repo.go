@@ -111,7 +111,7 @@ func (p *PrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId str
 			"reviewer_id": oldUserId,
 			"pr_id":       poolRequestId,
 		}).
-		Suffix("RETURNING pr_id")
+		Suffix("RETURNING reviewer_id")
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
