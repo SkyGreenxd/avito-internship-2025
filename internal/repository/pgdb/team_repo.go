@@ -136,7 +136,7 @@ func (t *TeamRepository) AddUsersToTeam(ctx context.Context, teamId int, users [
 	for _, user := range users {
 		userIDs = append(userIDs, user.Id)
 		userNames = append(userNames, user.Name)
-		userActives = append(userActives, true)
+		userActives = append(userActives, user.IsActive)
 	}
 
 	query := `
