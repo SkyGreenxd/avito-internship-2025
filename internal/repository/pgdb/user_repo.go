@@ -98,22 +98,23 @@ func (u *UserRepository) GetReviewCandidates(ctx context.Context, authorId strin
 	return toArrDomainUser(models), nil
 }
 
-func (u *UserRepository) GetReassignCandidates(ctx context.Context, authorId, oldReviewerId string, maxCandidates int) ([]domain.User, error) {
+func (u *UserRepository) GetReassignCandidates(ctx context.Context, authorId string, excludeIds []string, maxCandidates int) ([]domain.User, error) {
 	const op = "UserRepository.GetReassignCandidates"
 
-	query := `
-		SELECT u.id, u.name, u.is_active, u.team_id
-		FROM users u
-		JOIN users a ON a.id = $1
-		WHERE u.team_id = a.team_id
-		  AND u.is_active = TRUE
-		  AND u.id != $1
-		  AND u.id != $2
-		ORDER BY random()
-		LIMIT $3
-	`
+	builder := sq.Select("id", "name", "is_active", "team_id").
+		From("users").
+		Where(sq.Expr("team_id = (SELECT team_id FROM users WHERE id = ?)", authorId)).
+		Where(sq.Eq{"is_active": true}).
+		Where(sq.NotEq{"id": excludeIds}).
+		OrderBy("random()").
+		Limit(uint64(maxCandidates))
 
-	rows, err := u.Pool.Query(ctx, query, authorId, oldReviewerId, maxCandidates)
+	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	rows, err := u.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, e.Wrap(op, err)
 	}
