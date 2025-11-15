@@ -83,9 +83,9 @@ func initDeps(logger *logger.SlogLogger, db *postgres.PgDatabase) (
 	prRepo := pgdb.NewPullRequestsRepository(db.Pool)
 	statusRepo := pgdb.NewStatusRepo(db.Pool)
 
-	prUC = usecase.NewPullRequestUseCase(prRepo, reviewerRepo, userRepo, statusRepo)
+	prUC = usecase.NewPullRequestUseCase(prRepo, reviewerRepo, userRepo, statusRepo, db.Pool)
 	userUC = usecase.NewUserUseCase(reviewerRepo, userRepo, teamRepo)
-	teamUC = usecase.NewTeamUseCase(teamRepo, userRepo)
+	teamUC = usecase.NewTeamUseCase(teamRepo, userRepo, db.Pool)
 
 	adminToken := os.Getenv("ADMIN_TOKEN")
 	middleware = v1.NewMiddleware(logger, adminToken)
