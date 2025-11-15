@@ -9,7 +9,7 @@ type UserRepository interface {
 	UpdateIsActive(ctx context.Context, userId string, isActive bool) (domain.User, error)
 	GetById(ctx context.Context, userId string) (domain.User, error)
 	GetReviewCandidates(ctx context.Context, authorId string, maxCandidates int) ([]domain.User, error)
-	GetReassignCandidates(ctx context.Context, authorId, oldReviewerId string, maxCandidates int) ([]domain.User, error)
+	GetReassignCandidates(ctx context.Context, authorId string, excludeIds []string, maxCandidates int) ([]domain.User, error)
 }
 
 type TeamRepository interface {
