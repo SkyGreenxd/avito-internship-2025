@@ -49,7 +49,7 @@ func (p *PullRequestUseCase) PullRequestCreate(ctx context.Context, req CreatePu
 		return CreatePullRequestRes{}, e.Wrap(op, err)
 	}
 
-	reviewersIds := make([]string, len(reviewers))
+	reviewersIds := make([]string, 0, len(reviewers))
 	for i := range reviewers {
 		reviewersIds = append(reviewersIds, reviewers[i].Id)
 	}
@@ -85,7 +85,7 @@ func (p *PullRequestUseCase) PullRequestMerge(ctx context.Context, req PullReque
 func (p *PullRequestUseCase) ReviewerReassign(ctx context.Context, req PullRequestReassignReq) (PullRequestReassignRes, error) {
 	const op = "PullRequestUseCase.PullRequestReassign"
 
-	_, err := p.userRepo.GetById(ctx, req.OldUserId)
+	_, err := p.userRepo.GetById(ctx, req.OldReviewerId)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
@@ -95,7 +95,7 @@ func (p *PullRequestUseCase) ReviewerReassign(ctx context.Context, req PullReque
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
 
-	oldReviewerIndex := slices.Index(dto.ReviewersIds, req.OldUserId)
+	oldReviewerIndex := slices.Index(dto.ReviewersIds, req.OldReviewerId)
 	if oldReviewerIndex == -1 {
 		return PullRequestReassignRes{}, e.Wrap(op, e.ErrPrReviewerNotAssigned)
 	}
@@ -104,7 +104,9 @@ func (p *PullRequestUseCase) ReviewerReassign(ctx context.Context, req PullReque
 		return PullRequestReassignRes{}, e.Wrap(op, e.ErrPrMerged)
 	}
 
-	candidates, err := p.userRepo.GetReassignCandidates(ctx, dto.Pr.AuthorId, req.OldUserId, maxReviewers)
+	excludeIds := dto.ReviewersIds
+	excludeIds = append(excludeIds, dto.Pr.AuthorId)
+	candidates, err := p.userRepo.GetReassignCandidates(ctx, dto.Pr.AuthorId, excludeIds, maxReviewers)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
@@ -118,7 +120,7 @@ func (p *PullRequestUseCase) ReviewerReassign(ctx context.Context, req PullReque
 		candidatesIds[i] = candidates[i].Id
 	}
 
-	newReviewerId, err := p.reviewerRepo.UpdateReviewer(ctx, req.OldUserId, candidatesIds[0], dto.Pr.Id)
+	newReviewerId, err := p.reviewerRepo.UpdateReviewer(ctx, req.OldReviewerId, candidatesIds[0], dto.Pr.Id)
 	if err != nil {
 		return PullRequestReassignRes{}, e.Wrap(op, err)
 	}
