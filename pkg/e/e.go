@@ -32,6 +32,9 @@ var (
 
 	// Ошибки с валидацией
 	ErrValidatorFailed = fmt.Errorf("validator failed")
+
+	// Ошибки с транзакциями
+	ErrTransactionNotFound = fmt.Errorf("transaction not found in context")
 )
 
 const (
@@ -39,8 +42,8 @@ const (
 	TEAM_EXISTS  = "TEAM_EXISTS"
 	PR_EXISTS    = "PR_EXISTS"
 	PR_MERGED    = "PR_MERGED"
-	NOT_ASSIGNED = "NOT_ASSIGNED" // TODO: ошибка возникает, когда пытаются переназначить кого-то, кто не назначен на этот PR.
-	NO_CANDIDATE = "NO_CANDIDATE" // TODO: когда нет активных пользователей в команде для замены ревьювера
+	NOT_ASSIGNED = "NOT_ASSIGNED"
+	NO_CANDIDATE = "NO_CANDIDATE"
 	SERVER_ERR   = "SERVER_ERR"
 	BAD_REQUEST  = "BAD_REQUEST"
 )
