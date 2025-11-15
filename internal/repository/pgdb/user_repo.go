@@ -17,9 +17,8 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{Pool: pool}
 }
 
-// UpdateIsActiveWithTeamName обновляет is_active и возвращает имя команды пользователя
 func (u *UserRepository) UpdateIsActive(ctx context.Context, userId string, isActive bool) (domain.User, error) {
-	const op = "UserRepository.Update"
+	const op = "UserRepository.UpdateIsActive"
 
 	queryBuilder := sq.Update("users").
 		Set("is_active", isActive).
@@ -62,7 +61,7 @@ func (u *UserRepository) GetById(ctx context.Context, userId string) (domain.Use
 }
 
 func (u *UserRepository) GetReviewCandidates(ctx context.Context, authorId string, maxReviewers int) ([]domain.User, error) {
-	const op = "UserRepository.GetRandomReviewers"
+	const op = "UserRepository.GetReviewCandidates"
 
 	query := `
        SELECT id, name, is_active, team_id
@@ -134,6 +133,67 @@ func (u *UserRepository) GetReassignCandidates(ctx context.Context, authorId str
 	}
 
 	return toArrDomainUser(candidates), nil
+}
+
+func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId int, users []domain.User) ([]domain.User, error) {
+	const op = "UserRepository.AddUsersToTeam"
+
+	var userIDs []string
+	var userNames []string
+	var userActives []bool
+
+	for _, user := range users {
+		userIDs = append(userIDs, user.Id)
+		userNames = append(userNames, user.Name)
+		userActives = append(userActives, user.IsActive)
+	}
+
+	query := `
+		INSERT INTO users (id, name, is_active, team_id)
+		SELECT
+			u.id,
+			u.name,
+			u.is_active,
+			$4 -- team_id
+		FROM
+			UNNEST(
+				$1::varchar[],
+				$2::varchar[],
+				$3::boolean[]
+			) AS u(id, name, is_active)
+		ON CONFLICT (id) DO UPDATE
+		SET
+			name = EXCLUDED.name,
+			is_active = EXCLUDED.is_active,
+			team_id = EXCLUDED.team_id
+		RETURNING id, name, is_active, team_id;
+	`
+
+	rows, err := u.Pool.Query(ctx, query, userIDs, userNames, userActives, teamId)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+	defer rows.Close()
+
+	updUsers := make([]domain.User, 0, len(users))
+	for rows.Next() {
+		var userId string
+		var userName string
+		var userIsActive bool
+		var userTeamId *int
+		if err := rows.Scan(&userId, &userName, &userIsActive, &userTeamId); err != nil {
+			return nil, e.Wrap(op, err)
+		}
+
+		updUser := domain.NewUser(userId, userName, userIsActive, userTeamId)
+		updUsers = append(updUsers, *updUser)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	return updUsers, nil
 }
 
 func toDomainUser(u UserModel) domain.User {

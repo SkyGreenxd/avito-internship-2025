@@ -40,7 +40,7 @@ func (t *TeamRepository) Create(ctx context.Context, team domain.Team) (domain.T
 }
 
 func (t *TeamRepository) GetMembersByTeamNameWithUsers(ctx context.Context, teamName string) ([]domain.User, error) {
-	const op = "TeamRepository.GetByTeamNameWithUsers"
+	const op = "TeamRepository.GetMembersByTeamNameWithUsers"
 
 	builder := sq.Select(
 		"users.id", "users.name", "users.is_active", "users.team_id",
@@ -124,67 +124,6 @@ func (t *TeamRepository) GetTeamByUserId(ctx context.Context, userId string) (do
 	}
 
 	return toDomainTeam(model), nil
-}
-
-func (t *TeamRepository) AddUsersToTeam(ctx context.Context, teamId int, users []domain.User) ([]domain.User, error) {
-	const op = "UserRepository.AddUsersToTeam"
-
-	var userIDs []string
-	var userNames []string
-	var userActives []bool
-
-	for _, user := range users {
-		userIDs = append(userIDs, user.Id)
-		userNames = append(userNames, user.Name)
-		userActives = append(userActives, user.IsActive)
-	}
-
-	query := `
-		INSERT INTO users (id, name, is_active, team_id)
-		SELECT
-			u.id,
-			u.name,
-			u.is_active,
-			$4 -- team_id (один для всех)
-		FROM
-			UNNEST(
-				$1::varchar[],
-				$2::varchar[],
-				$3::boolean[]
-			) AS u(id, name, is_active)
-		ON CONFLICT (id) DO UPDATE
-		SET
-			name = EXCLUDED.name,
-			is_active = EXCLUDED.is_active,
-			team_id = EXCLUDED.team_id
-		RETURNING id, name, is_active, team_id;
-	`
-
-	rows, err := t.Pool.Query(ctx, query, userIDs, userNames, userActives, teamId)
-	if err != nil {
-		return nil, e.Wrap(op, err)
-	}
-	defer rows.Close()
-
-	updUsers := make([]domain.User, 0, len(users))
-	for rows.Next() {
-		var userId string
-		var userName string
-		var userIsActive bool
-		var userTeamId *int
-		if err := rows.Scan(&userId, &userName, &userIsActive, &userTeamId); err != nil {
-			return nil, e.Wrap(op, err)
-		}
-
-		updUser := domain.NewUser(userId, userName, userIsActive, userTeamId)
-		updUsers = append(updUsers, *updUser)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, e.Wrap(op, err)
-	}
-
-	return updUsers, nil
 }
 
 func toDomainTeam(model TeamModel) domain.Team {
