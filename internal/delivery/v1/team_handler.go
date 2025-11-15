@@ -10,7 +10,7 @@ import (
 func (h *Handler) addTeam(c *gin.Context) {
 	var team TeamAddReq
 	if err := c.ShouldBindJSON(&team); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 
@@ -26,7 +26,7 @@ func (h *Handler) addTeam(c *gin.Context) {
 func (h *Handler) getTeam(c *gin.Context) {
 	var req GetTeamQueryReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 

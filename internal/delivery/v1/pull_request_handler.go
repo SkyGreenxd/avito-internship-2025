@@ -10,7 +10,7 @@ import (
 func (h *Handler) pullRequestCreate(c *gin.Context) {
 	var req CreatePullRequestReq
 	if err := c.ShouldBind(&req); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 
@@ -26,7 +26,7 @@ func (h *Handler) pullRequestCreate(c *gin.Context) {
 func (h *Handler) pullRequestMerge(c *gin.Context) {
 	var req PullRequestMergeReq
 	if err := c.ShouldBind(&req); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h *Handler) pullRequestMerge(c *gin.Context) {
 func (h *Handler) reviewerReassign(c *gin.Context) {
 	var req PullRequestReassignReq
 	if err := c.ShouldBind(&req); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 

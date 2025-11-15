@@ -10,7 +10,7 @@ import (
 func (h *Handler) setIsActive(c *gin.Context) {
 	var req SetIsActiveReq
 	if err := c.ShouldBind(&req); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 
@@ -26,7 +26,7 @@ func (h *Handler) setIsActive(c *gin.Context) {
 func (h *Handler) getReview(c *gin.Context) {
 	var req GetReviewQueryReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.Error(e.ErrInvalidRequestBody)
+		c.Error(e.Wrap(err.Error(), e.ErrInvalidRequestBody))
 		return
 	}
 
