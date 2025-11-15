@@ -6,7 +6,7 @@ import "avito-internship/internal/usecase"
 func toUseCaseSetIsActiveReq(req SetIsActiveReq) usecase.SetIsActiveReq {
 	return usecase.SetIsActiveReq{
 		UserId:   req.UserId,
-		IsActive: req.IsActive,
+		IsActive: *req.IsActive,
 	}
 }
 
@@ -84,7 +84,7 @@ func toUseCaseTeamMemberDTO(m TeamMemberDTO) usecase.TeamMemberDTO {
 	return usecase.TeamMemberDTO{
 		Id:       m.Id,
 		Username: m.Username,
-		IsActive: m.IsActive,
+		IsActive: *m.IsActive,
 	}
 }
 
@@ -107,7 +107,7 @@ func toDeliveryTeamMemberDTO(m usecase.TeamMemberDTO) TeamMemberDTO {
 	return TeamMemberDTO{
 		Id:       m.Id,
 		Username: m.Username,
-		IsActive: m.IsActive,
+		IsActive: &m.IsActive,
 	}
 }
 
@@ -122,7 +122,17 @@ func toUseCaseCreatePullRequestReq(req CreatePullRequestReq) usecase.CreatePullR
 
 func toDeliveryCreatePullRequestRes(res usecase.CreatePullRequestRes) CreatePullRequestRes {
 	return CreatePullRequestRes{
-		PullRequest: toDeliveryPullRequestDTO(res.PullRequest),
+		PullRequest: toCreatePullRequestDTO(res.PullRequest),
+	}
+}
+
+func toCreatePullRequestDTO(pr usecase.PullRequestDTO) CreatePullRequestDTO {
+	return CreatePullRequestDTO{
+		Id:                pr.Id,
+		Name:              pr.Name,
+		AuthorId:          pr.AuthorId,
+		Status:            pr.Status,
+		AssignedReviewers: pr.AssignedReviewers,
 	}
 }
 
@@ -146,14 +156,25 @@ func toUseCasePullRequestMergeReq(req PullRequestMergeReq) usecase.PullRequestMe
 
 func toDeliveryPullRequestMergeRes(res usecase.PullRequestMergeRes) PullRequestMergeRes {
 	return PullRequestMergeRes{
-		PullRequest: toDeliveryPullRequestDTO(res.PullRequest),
+		PullRequest: NewMergePullRequestDTO(res.PullRequest),
+	}
+}
+
+func NewMergePullRequestDTO(pr usecase.PullRequestDTO) MergePullRequestDTO {
+	return MergePullRequestDTO{
+		Id:                pr.Id,
+		Name:              pr.Name,
+		AuthorId:          pr.AuthorId,
+		Status:            pr.Status,
+		AssignedReviewers: pr.AssignedReviewers,
+		MergedAt:          pr.MergedAt,
 	}
 }
 
 func toUseCasePullRequestReassignReq(req PullRequestReassignReq) usecase.PullRequestReassignReq {
 	return usecase.PullRequestReassignReq{
 		PullRequestId: req.PullRequestId,
-		OldUserId:     req.OldUserId,
+		OldReviewerId: req.OldReviewerId,
 	}
 }
 
