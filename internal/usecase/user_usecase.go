@@ -41,6 +41,11 @@ func (u *UserUseCase) SetIsActive(ctx context.Context, req SetIsActiveReq) (SetI
 func (u *UserUseCase) GetReview(ctx context.Context, userId string) (GetReviewRes, error) {
 	const op = "UserUseCase.GetReview"
 
+	_, err := u.userRepo.GetById(ctx, userId)
+	if err != nil {
+		return GetReviewRes{}, e.Wrap(op, err)
+	}
+
 	dto, err := u.reviewerRepo.GetPRByReviewer(ctx, userId)
 	if err != nil {
 		return GetReviewRes{}, e.Wrap(op, err)
