@@ -4,27 +4,26 @@ import (
 	"avito-internship/internal/domain"
 )
 
-// TODO: добавить валидацию
 type TeamMemberDTO struct {
-	Id       string `json:"user_id" binding:"required,regexp=^u([1-9]|[1-9][0-9]|[1-9][0-9]{2})$"`
+	Id       string `json:"user_id" binding:"required,userid"`
 	Username string `json:"username" binding:"required"`
-	IsActive bool   `json:"is_active" binding:"required"`
+	IsActive *bool  `json:"is_active" binding:"required"`
 }
 
 type TeamDTO struct {
 	TeamName string          `json:"team_name" binding:"required"`
-	Members  []TeamMemberDTO `json:"members" binding:"required"`
+	Members  []TeamMemberDTO `json:"members" binding:"required,dive"`
 }
 
 type UserDTO struct {
-	Id       string `json:"user_id" binding:"required,regexp=^u([1-9]|[1-9][0-9]|[1-9][0-9]{2})$"`
+	Id       string `json:"user_id" binding:"required,userid"`
 	Username string `json:"username" binding:"required"`
 	TeamName string `json:"team_name" binding:"required"`
 	IsActive bool   `json:"is_active" binding:"required"`
 }
 
 type PullRequestDTO struct {
-	Id                string          `json:"pull_request_id" binding:"required,regexp=^pr-(100[1-9]|10[1-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3})$"`
+	Id                string          `json:"pull_request_id" binding:"required,prid"`
 	Name              string          `json:"pull_request_name" binding:"required"`
 	AuthorId          string          `json:"author_id" binding:"required"`
 	Status            domain.PRStatus `json:"status" binding:"required"`
@@ -34,7 +33,7 @@ type PullRequestDTO struct {
 }
 
 type PullRequestShort struct {
-	Id       string          `json:"pull_request_id" binding:"required,regexp=^pr-(100[1-9]|10[1-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3})$"`
+	Id       string          `json:"pull_request_id" binding:"required,prid"`
 	Name     string          `json:"pull_request_name" binding:"required"`
 	AuthorId string          `json:"author_id" binding:"required"`
 	Status   domain.PRStatus `json:"status" binding:"required"`
@@ -42,7 +41,7 @@ type PullRequestShort struct {
 
 type TeamAddReq struct {
 	TeamName string          `json:"team_name" binding:"required"`
-	Members  []TeamMemberDTO `json:"members" binding:"required"`
+	Members  []TeamMemberDTO `json:"members" binding:"required,dive"`
 }
 
 type TeamAddRes struct {
@@ -50,7 +49,7 @@ type TeamAddRes struct {
 }
 
 type GetTeamQueryReq struct {
-	TeamName string `json:"team_name" binding:"required"`
+	TeamName string `form:"team_name" binding:"required"`
 }
 
 type GetTeamRes struct {
@@ -59,8 +58,8 @@ type GetTeamRes struct {
 }
 
 type SetIsActiveReq struct {
-	UserId   string `json:"user_id" binding:"required,regexp=^u([1-9]|[1-9][0-9]|[1-9][0-9]{2})$"`
-	IsActive bool   `json:"is_active" binding:"required"`
+	UserId   string `json:"user_id" binding:"required,userid"`
+	IsActive *bool  `json:"is_active" binding:"required"`
 }
 
 type SetIsActiveRes struct {
@@ -68,26 +67,43 @@ type SetIsActiveRes struct {
 }
 
 type CreatePullRequestReq struct {
-	Id       string `json:"pull_request_id" binding:"required,regexp=^pr-(100[1-9]|10[1-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3})$"`
+	Id       string `json:"pull_request_id" binding:"required,prid"`
 	Name     string `json:"pull_request_name" binding:"required"`
-	AuthorId string `json:"author_id" binding:"required,regexp=^u([1-9]|[1-9][0-9]|[1-9][0-9]{2})$"`
+	AuthorId string `json:"author_id" binding:"required,userid"`
+}
+
+type CreatePullRequestDTO struct {
+	Id                string          `json:"pull_request_id" binding:"required,prid"`
+	Name              string          `json:"pull_request_name" binding:"required"`
+	AuthorId          string          `json:"author_id" binding:"required"`
+	Status            domain.PRStatus `json:"status" binding:"required"`
+	AssignedReviewers []string        `json:"assigned_reviewers" binding:"required"`
 }
 
 type CreatePullRequestRes struct {
-	PullRequest PullRequestDTO `json:"pr"`
+	PullRequest CreatePullRequestDTO `json:"pr"`
 }
 
 type PullRequestMergeReq struct {
-	Id string `json:"pull_request_id" binding:"required,regexp=^pr-(100[1-9]|10[1-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3})$"`
+	Id string `json:"pull_request_id" binding:"required,prid"`
+}
+
+type MergePullRequestDTO struct {
+	Id                string          `json:"pull_request_id" binding:"required,prid"`
+	Name              string          `json:"pull_request_name" binding:"required"`
+	AuthorId          string          `json:"author_id" binding:"required"`
+	Status            domain.PRStatus `json:"status" binding:"required"`
+	AssignedReviewers []string        `json:"assigned_reviewers" binding:"required"`
+	MergedAt          *string         `json:"mergedAt" binding:"omitempty"`
 }
 
 type PullRequestMergeRes struct {
-	PullRequest PullRequestDTO `json:"pr"`
+	PullRequest MergePullRequestDTO `json:"pr"`
 }
 
 type PullRequestReassignReq struct {
-	PullRequestId string `json:"pull_request_id" binding:"required,regexp=^pr-(100[1-9]|10[1-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3})$"`
-	OldUserId     string `json:"old_user_id" binding:"required,regexp=^u([1-9]|[1-9][0-9]|[1-9][0-9]{2})$"`
+	PullRequestId string `json:"pull_request_id" binding:"required,prid"`
+	OldReviewerId string `json:"old_reviewer_id" binding:"required,userid"`
 }
 
 type PullRequestReassignRes struct {
@@ -96,10 +112,10 @@ type PullRequestReassignRes struct {
 }
 
 type GetReviewQueryReq struct {
-	UserID string `form:"user_id" binding:"required,regexp=^u([1-9]|[1-9][0-9]|[1-9][0-9]{2})$"`
+	UserID string `form:"user_id" binding:"required,userid"`
 }
 
 type GetReviewRes struct {
 	UserId       string             `json:"user_id"`
-	PullRequests []PullRequestShort `json:"pull_requests" `
+	PullRequests []PullRequestShort `json:"pull_requests"`
 }

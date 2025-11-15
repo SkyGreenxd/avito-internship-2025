@@ -88,7 +88,7 @@ type PullRequestMergeRes struct {
 
 type PullRequestReassignReq struct {
 	PullRequestId string
-	OldUserId     string
+	OldReviewerId string
 }
 
 type PullRequestReassignRes struct {
