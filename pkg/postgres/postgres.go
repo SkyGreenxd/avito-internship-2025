@@ -6,12 +6,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PgDatabase struct {
@@ -25,7 +28,14 @@ func NewPgDatabase(pool *pgxpool.Pool, dsn string) *PgDatabase {
 
 func Connect() (*PgDatabase, error) {
 	const op = "PgDatabase.Connect"
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"),
+	)
 
 	pool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
