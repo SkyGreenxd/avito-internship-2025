@@ -42,7 +42,7 @@ func (p *PrReviewerRepository) AddReviewers(ctx context.Context, poolRequestId s
 }
 
 func (p *PrReviewerRepository) GetPRByReviewer(ctx context.Context, userId string) (r.GetPRByReviewerDTO, error) {
-	const op = "PrReviewerRepository.GetByReviewer"
+	const op = "PrReviewerRepository.GetPRByReviewer"
 
 	builder := sq.Select(
 		"pr.id",
