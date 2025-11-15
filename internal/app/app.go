@@ -7,6 +7,7 @@ import (
 	"avito-internship/internal/usecase"
 	"avito-internship/pkg/logger"
 	"avito-internship/pkg/postgres"
+	v "avito-internship/pkg/validator"
 	"context"
 	"errors"
 	"net/http"
@@ -14,10 +15,7 @@ import (
 	"os/signal"
 	"time"
 
-	v "avito-internship/pkg/validator"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 )
 
 func Run() {
@@ -39,10 +37,11 @@ func Run() {
 	handler := v1.NewHandler(userUC, teamUC, prUC, middleware)
 
 	r := gin.Default()
-	if validator, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		validator.RegisterValidation("userid", v.ValidateUserID)
-		validator.RegisterValidation("prid", v.ValidatePullRequestID)
+	if err := v.RegisterValidators(); err != nil {
+		slogLogger.Errorf(err, "unable to register validators")
+		return
 	}
+
 	handler.Init(r)
 
 	serverCfg := server.LoadHttpServerConfig(slogLogger)
