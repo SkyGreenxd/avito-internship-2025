@@ -26,7 +26,7 @@ func (s *StatusRepo) GetById(ctx context.Context, statusId int) (domain.Status, 
 	var model StatusModel
 	err := s.Pool.QueryRow(ctx, query, statusId).Scan(&model.Id, &model.Name)
 	if err = checkGetQueryResult(err, e.ErrStatusNotFound); err != nil {
-		return domain.Status{}, err
+		return domain.Status{}, e.Wrap(op, err)
 	}
 
 	return toDomainStatus(model), nil
@@ -47,7 +47,7 @@ func (s *StatusRepo) GetByName(ctx context.Context, statusName string) (domain.S
 	var model StatusModel
 	err := s.Pool.QueryRow(ctx, query, statusName).Scan(&model.Id, &model.Name)
 	if err = checkGetQueryResult(err, e.ErrStatusNotFound); err != nil {
-		return domain.Status{}, err
+		return domain.Status{}, e.Wrap(op, err)
 	}
 
 	return toDomainStatus(model), nil
