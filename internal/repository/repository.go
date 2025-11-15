@@ -10,13 +10,13 @@ type UserRepository interface {
 	GetById(ctx context.Context, userId string) (domain.User, error)
 	GetReviewCandidates(ctx context.Context, authorId string, maxCandidates int) ([]domain.User, error)
 	GetReassignCandidates(ctx context.Context, authorId string, excludeIds []string, maxCandidates int) ([]domain.User, error)
+	AddUsersToTeam(ctx context.Context, teamId int, users []domain.User) ([]domain.User, error)
 }
 
 type TeamRepository interface {
 	Create(ctx context.Context, team domain.Team) (domain.Team, error)
 	GetMembersByTeamNameWithUsers(ctx context.Context, teamName string) ([]domain.User, error)
 	GetTeamByUserId(ctx context.Context, userId string) (domain.Team, error)
-	AddUsersToTeam(ctx context.Context, teamId int, users []domain.User) ([]domain.User, error)
 }
 
 type PullRequestRepository interface {
