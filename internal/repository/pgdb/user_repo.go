@@ -3,6 +3,7 @@ package pgdb
 import (
 	"avito-internship/internal/domain"
 	"avito-internship/pkg/e"
+	"avito-internship/pkg/transaction"
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
@@ -63,6 +64,11 @@ func (u *UserRepository) GetById(ctx context.Context, userId string) (domain.Use
 func (u *UserRepository) GetReviewCandidates(ctx context.Context, authorId string, maxReviewers int) ([]domain.User, error) {
 	const op = "UserRepository.GetReviewCandidates"
 
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
 	query := `
        SELECT id, name, is_active, team_id
        FROM users
@@ -74,7 +80,7 @@ func (u *UserRepository) GetReviewCandidates(ctx context.Context, authorId strin
        LIMIT $2
     `
 
-	rows, err := u.Pool.Query(ctx, query, authorId, maxReviewers)
+	rows, err := tx.Query(ctx, query, authorId, maxReviewers)
 	if err != nil {
 		return nil, e.Wrap(op, err)
 	}
@@ -138,6 +144,11 @@ func (u *UserRepository) GetReassignCandidates(ctx context.Context, authorId str
 func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId int, users []domain.User) ([]domain.User, error) {
 	const op = "UserRepository.AddUsersToTeam"
 
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
 	var userIDs []string
 	var userNames []string
 	var userActives []bool
@@ -169,7 +180,7 @@ func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId int, users [
 		RETURNING id, name, is_active, team_id;
 	`
 
-	rows, err := u.Pool.Query(ctx, query, userIDs, userNames, userActives, teamId)
+	rows, err := tx.Query(ctx, query, userIDs, userNames, userActives, teamId)
 	if err != nil {
 		return nil, e.Wrap(op, err)
 	}
@@ -180,7 +191,7 @@ func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId int, users [
 		var userId string
 		var userName string
 		var userIsActive bool
-		var userTeamId *int
+		var userTeamId int
 		if err := rows.Scan(&userId, &userName, &userIsActive, &userTeamId); err != nil {
 			return nil, e.Wrap(op, err)
 		}

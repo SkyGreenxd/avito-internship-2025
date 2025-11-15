@@ -3,6 +3,7 @@ package pgdb
 import (
 	"avito-internship/internal/domain"
 	"avito-internship/pkg/e"
+	"avito-internship/pkg/transaction"
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
@@ -20,18 +21,23 @@ func NewTeamRepository(pool *pgxpool.Pool) *TeamRepository {
 func (t *TeamRepository) Create(ctx context.Context, team domain.Team) (domain.Team, error) {
 	const op = "TeamRepository.Create"
 
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return domain.Team{}, e.Wrap(op, err)
+	}
+
 	model := toTeamModel(team)
 	queryBuilder := sq.Insert("teams").
 		Columns("name").
 		Values(model.Name).
 		Suffix("RETURNING id, name")
 
-	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	teamQuery, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return domain.Team{}, e.Wrap(op, err)
 	}
 
-	err = t.Pool.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name)
+	err = tx.QueryRow(ctx, teamQuery, args...).Scan(&model.Id, &model.Name)
 	if err = postgresDuplicate(err, e.ErrTeamIsExists); err != nil {
 		return domain.Team{}, e.Wrap(op, err)
 	}
@@ -72,7 +78,7 @@ func (t *TeamRepository) GetMembersByTeamNameWithUsers(ctx context.Context, team
 			uId       *string
 			uName     *string
 			uIsActive *bool
-			uTeamId   *int
+			uTeamId   int
 		)
 
 		err := rows.Scan(

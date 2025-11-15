@@ -4,6 +4,7 @@ import (
 	"avito-internship/internal/domain"
 	r "avito-internship/internal/repository"
 	"avito-internship/pkg/e"
+	"avito-internship/pkg/transaction"
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
@@ -21,6 +22,11 @@ func NewPullRequestsRepository(pool *pgxpool.Pool) *PullRequestsRepository {
 func (p *PullRequestsRepository) Create(ctx context.Context, pullRequest domain.PullRequest) (domain.PullRequest, error) {
 	const op = "PullRequestsRepository.Create"
 
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return domain.PullRequest{}, e.Wrap(op, err)
+	}
+
 	model := toPRModel(pullRequest)
 	builder := sq.Insert("pull_requests").
 		Columns("id", "name", "author_id", "status_id", "need_more_reviewers", "created_at").
@@ -32,7 +38,7 @@ func (p *PullRequestsRepository) Create(ctx context.Context, pullRequest domain.
 		return domain.PullRequest{}, e.Wrap(op, err)
 	}
 
-	err = p.Pool.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name, &model.AuthorId, &model.StatusId, &model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt)
+	err = tx.QueryRow(ctx, query, args...).Scan(&model.Id, &model.Name, &model.AuthorId, &model.StatusId, &model.NeedMoreReviewers, &model.CreatedAt, &model.MergedAt)
 	err = postgresDuplicate(err, e.ErrPRIsExists)
 	err = postgresForeignKeyViolation(err, e.ErrUserNotFound)
 	if err != nil {

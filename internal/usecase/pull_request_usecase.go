@@ -4,8 +4,12 @@ import (
 	"avito-internship/internal/domain"
 	r "avito-internship/internal/repository"
 	"avito-internship/pkg/e"
+	"avito-internship/pkg/transaction"
 	"context"
 	"slices"
+	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 const (
@@ -17,15 +21,17 @@ type PullRequestUseCase struct {
 	reviewerRepo r.PrReviewerRepository
 	userRepo     r.UserRepository
 	statusRepo   r.StatusRepository
+	dbPool       transaction.Transactional
 }
 
 func NewPullRequestUseCase(prRepo r.PullRequestRepository, reviewerRepo r.PrReviewerRepository,
-	userRepo r.UserRepository, statusRepo r.StatusRepository) *PullRequestUseCase {
+	userRepo r.UserRepository, statusRepo r.StatusRepository, dbPool transaction.Transactional) *PullRequestUseCase {
 	return &PullRequestUseCase{
 		prRepo:       prRepo,
 		reviewerRepo: reviewerRepo,
 		userRepo:     userRepo,
 		statusRepo:   statusRepo,
+		dbPool:       dbPool,
 	}
 }
 
@@ -33,18 +39,14 @@ func NewPullRequestUseCase(prRepo r.PullRequestRepository, reviewerRepo r.PrRevi
 func (p *PullRequestUseCase) PullRequestCreate(ctx context.Context, req CreatePullRequestReq) (CreatePullRequestRes, error) {
 	const op = "PullRequestUseCase.PullRequestCreate"
 
-	status, err := p.statusRepo.GetByName(ctx, string(domain.OPEN))
+	ctx, tx, err := transaction.NewTransaction(ctx, pgx.TxOptions{}, p.dbPool)
 	if err != nil {
 		return CreatePullRequestRes{}, e.Wrap(op, err)
 	}
+	defer tx.Rollback(ctx)
+	ctx = context.WithValue(ctx, "tx", tx.Transaction())
 
-	pr := domain.NewPoolRequest(req.Id, req.Name, req.AuthorId, status.Id)
-	newPr, err := p.prRepo.Create(ctx, *pr)
-	if err != nil {
-		return CreatePullRequestRes{}, e.Wrap(op, err)
-	}
-
-	reviewers, err := p.userRepo.GetReviewCandidates(ctx, pr.AuthorId, maxReviewers)
+	reviewers, err := p.userRepo.GetReviewCandidates(ctx, req.AuthorId, maxReviewers)
 	if err != nil {
 		return CreatePullRequestRes{}, e.Wrap(op, err)
 	}
@@ -54,11 +56,27 @@ func (p *PullRequestUseCase) PullRequestCreate(ctx context.Context, req CreatePu
 		reviewersIds = append(reviewersIds, reviewers[i].Id)
 	}
 
+	status, err := p.statusRepo.GetByName(ctx, string(domain.OPEN))
+	if err != nil {
+		return CreatePullRequestRes{}, e.Wrap(op, err)
+	}
+
+	needMoreReviewers := len(reviewersIds) < maxReviewers
+	pr := domain.NewPoolRequest(req.Id, req.Name, req.AuthorId, status.Id, needMoreReviewers, time.Now())
+	newPr, err := p.prRepo.Create(ctx, *pr)
+	if err != nil {
+		return CreatePullRequestRes{}, e.Wrap(op, err)
+	}
+
 	if len(reviewers) > 0 {
 		err := p.reviewerRepo.AddReviewers(ctx, newPr.Id, reviewersIds)
 		if err != nil {
 			return CreatePullRequestRes{}, e.Wrap(op, err)
 		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return CreatePullRequestRes{}, e.Wrap(op, err)
 	}
 
 	prDTO := NewPullRequestDTO(*pr, reviewersIds, status.Name)
