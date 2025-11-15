@@ -9,11 +9,13 @@ import (
 
 type TeamUseCase struct {
 	teamRepo r.TeamRepository
+	userRepo r.UserRepository
 }
 
-func NewTeamUseCase(teamRepo r.TeamRepository) *TeamUseCase {
+func NewTeamUseCase(teamRepo r.TeamRepository, userRepo r.UserRepository) *TeamUseCase {
 	return &TeamUseCase{
 		teamRepo: teamRepo,
+		userRepo: userRepo,
 	}
 }
 
@@ -36,7 +38,7 @@ func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, 
 		users = append(users, TeamMemberDTOtoDomainUser(member))
 	}
 
-	members, err := t.teamRepo.AddUsersToTeam(ctx, newTeam.Id, users)
+	members, err := t.userRepo.AddUsersToTeam(ctx, newTeam.Id, users)
 	if err != nil {
 		return TeamAddRes{}, e.Wrap(op, err)
 	}
