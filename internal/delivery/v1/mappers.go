@@ -2,7 +2,6 @@ package v1
 
 import "avito-internship/internal/usecase"
 
-// User mappers
 func toUseCaseSetIsActiveReq(req SetIsActiveReq) usecase.SetIsActiveReq {
 	return usecase.SetIsActiveReq{
 		UserId:   req.UserId,
@@ -50,7 +49,6 @@ func toDeliveryPullRequestShort(pr usecase.PullRequestShort) PullRequestShort {
 	}
 }
 
-// Team mappers
 func toDeliveryGetTeamRes(res usecase.GetTeamRes) GetTeamRes {
 	return GetTeamRes{
 		TeamName: res.TeamName,
@@ -111,7 +109,6 @@ func toDeliveryTeamMemberDTO(m usecase.TeamMemberDTO) TeamMemberDTO {
 	}
 }
 
-// PullRequest mappers
 func toUseCaseCreatePullRequestReq(req CreatePullRequestReq) usecase.CreatePullRequestReq {
 	return usecase.CreatePullRequestReq{
 		Id:       req.Id,
@@ -183,4 +180,27 @@ func toDeliveryPullRequestReassignRes(res usecase.PullRequestReassignRes) PullRe
 		Pr:         toDeliveryPullRequestDTO(res.Pr),
 		ReplacedBy: res.ReplacedBy,
 	}
+}
+
+func toUseCaseDeactivateMembers(req DeactivateMembersReq) usecase.DeactivateMembersReq {
+	return usecase.DeactivateMembersReq{
+		TeamName: req.TeamName,
+		Members:  req.Members,
+	}
+}
+
+func toDeliveryDeactivateMembers(res usecase.DeactivateMembersRes) DeactivateMembersRes {
+	return DeactivateMembersRes{
+		TeamName:           res.TeamName,
+		DeactivatedMembers: toArrTeamMemberDTO(res.DeactivatedMembers),
+		UpdPrs:             toArrDeliveryPullRequestDTO(res.UpdPrs),
+	}
+}
+
+func toArrDeliveryPullRequestDTO(pr []usecase.PullRequestDTO) []PullRequestDTO {
+	result := make([]PullRequestDTO, 0, len(pr))
+	for _, pr := range pr {
+		result = append(result, toDeliveryPullRequestDTO(pr))
+	}
+	return result
 }
