@@ -46,6 +46,8 @@ func ToHTTPResponse(err error) (int, string, string) {
 		return http.StatusBadRequest, e.BAD_REQUEST, e.ErrEmptyMembers.Error()
 	case errors.Is(err, e.ErrInvalidRequestBody):
 		return http.StatusBadRequest, e.BAD_REQUEST, e.ErrInvalidRequestBody.Error()
+	case errors.Is(err, e.ErrInvalidMember):
+		return http.StatusBadRequest, e.BAD_REQUEST, e.ErrInvalidMember.Error()
 	default:
 		return http.StatusInternalServerError, e.SERVER_ERR, e.ErrInternalServerError.Error()
 	}
