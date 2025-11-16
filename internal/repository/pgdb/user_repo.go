@@ -177,7 +177,7 @@ func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId int, users [
 			name = EXCLUDED.name,
 			is_active = EXCLUDED.is_active,
 			team_id = EXCLUDED.team_id
-		RETURNING id, name, is_active, team_id;
+		RETURNING id, name, is_active, team_id
 	`
 
 	rows, err := tx.Query(ctx, query, userIDs, userNames, userActives, teamId)
@@ -205,6 +205,46 @@ func (u *UserRepository) AddUsersToTeam(ctx context.Context, teamId int, users [
 	}
 
 	return updUsers, nil
+}
+
+func (u *UserRepository) DeactivateUsers(ctx context.Context, ids []string) ([]domain.User, error) {
+	const op = "UserRepository.DeactivateTeamMembers"
+
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	queryBuilder := sq.Update("users").
+		Set("is_active", false).
+		Where(sq.Eq{"id": ids}).
+		Suffix("RETURNING id, name, team_id, is_active")
+
+	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	rows, err := tx.Query(ctx, query, args...)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+	defer rows.Close()
+
+	var users []UserModel
+	for rows.Next() {
+		var m UserModel
+		if err := rows.Scan(&m.Id, &m.Name, &m.TeamId, &m.IsActive); err != nil {
+			return nil, e.Wrap(op, err)
+		}
+		users = append(users, m)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	return toArrDomainUser(users), nil
 }
 
 func toDomainUser(u UserModel) domain.User {

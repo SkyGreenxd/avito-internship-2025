@@ -10,6 +10,7 @@ type UserUC interface {
 type TeamUC interface {
 	AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, error)
 	GetTeam(ctx context.Context, teamName string) (GetTeamRes, error)
+	DeactivateMembers(ctx context.Context, req DeactivateMembersReq) (DeactivateMembersRes, error)
 }
 
 type PullRequestUC interface {

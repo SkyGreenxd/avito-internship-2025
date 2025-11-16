@@ -4,7 +4,9 @@ import (
 	"avito-internship/internal/domain"
 	r "avito-internship/internal/repository"
 	"avito-internship/pkg/e"
+	"avito-internship/pkg/transaction"
 	"context"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,6 +23,11 @@ func NewPrReviewerRepository(pool *pgxpool.Pool) *PrReviewerRepository {
 func (p *PrReviewerRepository) AddReviewers(ctx context.Context, poolRequestId string, reviewersId []string) error {
 	const op = "PrReviewerRepository.AddReviewers"
 
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return e.Wrap(op, err)
+	}
+
 	builder := sq.Insert("pr_reviewers").
 		Columns("reviewer_id", "pr_id")
 
@@ -33,7 +40,7 @@ func (p *PrReviewerRepository) AddReviewers(ctx context.Context, poolRequestId s
 		return e.Wrap(op, err)
 	}
 
-	_, err = p.Pool.Exec(ctx, query, args...)
+	_, err = tx.Exec(ctx, query, args...)
 	if err != nil {
 		return e.Wrap(op, err)
 	}
@@ -125,4 +132,60 @@ func (p *PrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId str
 	}
 
 	return returnedPrID, nil
+}
+
+func (p *PrReviewerRepository) UpdateReviewers(ctx context.Context, changes map[string]r.PrReviewerChange) error {
+	const op = "PrReviewerRepository.UpdateReviewers"
+
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return e.Wrap(op, err)
+	}
+
+	delPairs := make([][]interface{}, 0)
+	for prID, change := range changes {
+		for _, r := range change.ToRemove {
+			delPairs = append(delPairs, []interface{}{prID, r})
+		}
+	}
+	if len(delPairs) > 0 {
+		delSQL := "DELETE FROM pr_reviewers WHERE (pr_id, reviewer_id) IN ("
+		args := []interface{}{}
+		for i, pair := range delPairs {
+			if i > 0 {
+				delSQL += ","
+			}
+			delSQL += fmt.Sprintf("($%d,$%d)", i*2+1, i*2+2)
+			args = append(args, pair[0], pair[1])
+		}
+		delSQL += ")"
+		if _, err := tx.Exec(ctx, delSQL, args...); err != nil {
+			return e.Wrap(op, err)
+		}
+	}
+
+	insertBuilder := sq.Insert("pr_reviewers").
+		Columns("pr_id", "reviewer_id").
+		Suffix("ON CONFLICT DO NOTHING").
+		PlaceholderFormat(sq.Dollar)
+
+	hasInserts := false
+	for prID, change := range changes {
+		for _, r := range change.ToAdd {
+			insertBuilder = insertBuilder.Values(prID, r)
+			hasInserts = true
+		}
+	}
+
+	if hasInserts {
+		sqlStr, args, err := insertBuilder.ToSql()
+		if err != nil {
+			return e.Wrap(op, err)
+		}
+		if _, err := tx.Exec(ctx, sqlStr, args...); err != nil {
+			return e.Wrap(op, err)
+		}
+	}
+
+	return nil
 }

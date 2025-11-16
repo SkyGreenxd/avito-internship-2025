@@ -159,6 +159,92 @@ func (p *PullRequestsRepository) GetByPrIdWithReviewersIds(ctx context.Context, 
 	return r.NewGetByPrIdWithReviewersIdsDTO(toDomainPR(model), reviewersIds, statusName), nil
 }
 
+func (p *PullRequestsRepository) GetOpenPRsByReviewerIDs(ctx context.Context, reviewersIds []string, statusId int) (map[string]r.GetOpenPRsByReviewerIDsDTO, error) {
+	const op = "PullRequestsRepository.GetOpenPRsByReviewerIDs"
+
+	tx, err := transaction.TxFromCtx(ctx)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	query := `
+       SELECT
+          pr.id AS pr_id,
+          pr.name AS pr_name,
+          pr.author_id AS author_id,
+          pr.status_id AS status_id,
+          s.name AS status_name,
+          pr.need_more_reviewers AS need_more_reviewers,
+          pr.created_at AS created_at,
+          pr.merged_at AS merged_at,
+          r_all.reviewer_id AS reviewer_id
+       FROM pull_requests pr
+       JOIN pr_reviewers r_search ON pr.id = r_search.pr_id
+       JOIN pr_reviewers r_all ON pr.id = r_all.pr_id
+       JOIN statuses s ON pr.status_id = s.id
+       WHERE r_search.reviewer_id = ANY($1)
+          AND pr.status_id = $2
+       ORDER BY pr.id;
+    `
+
+	rows, err := tx.Query(ctx, query, reviewersIds, statusId)
+	if err != nil {
+		return nil, e.Wrap(op, err)
+	}
+	defer rows.Close()
+
+	prTempMap := make(map[string]r.GetOpenPRsByReviewerIDsDTO)
+
+	for rows.Next() {
+		var prID, reviewerID, statusName string
+		var pr domain.PullRequest
+
+		if err := rows.Scan(
+			&pr.Id,
+			&pr.Name,
+			&pr.AuthorId,
+			&pr.StatusId,
+			&statusName,
+			&pr.NeedMoreReviewers,
+			&pr.CreatedAt,
+			&pr.MergedAt,
+			&reviewerID,
+		); err != nil {
+			return nil, e.Wrap(op, err)
+		}
+
+		prID = pr.Id
+
+		dto, exists := prTempMap[prID]
+		if !exists {
+			dto = r.GetOpenPRsByReviewerIDsDTO{
+				Pr:           pr,
+				ReviewersIds: []string{},
+				StatusName:   statusName,
+			}
+			prTempMap[prID] = dto
+		}
+
+		found := false
+		for _, id := range dto.ReviewersIds {
+			if id == reviewerID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			dto.ReviewersIds = append(dto.ReviewersIds, reviewerID)
+			prTempMap[prID] = dto
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, e.Wrap(op, err)
+	}
+
+	return prTempMap, nil
+}
+
 func toPRModel(p domain.PullRequest) PullRequestModel {
 	return PullRequestModel{
 		Id:                p.Id,
