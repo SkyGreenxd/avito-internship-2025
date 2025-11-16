@@ -11,6 +11,7 @@ type UserRepository interface {
 	GetReviewCandidates(ctx context.Context, authorId string, maxCandidates int) ([]domain.User, error)
 	GetReassignCandidates(ctx context.Context, authorId string, excludeIds []string, maxCandidates int) ([]domain.User, error)
 	AddUsersToTeam(ctx context.Context, teamId int, users []domain.User) ([]domain.User, error)
+	DeactivateUsers(ctx context.Context, ids []string) ([]domain.User, error)
 }
 
 type TeamRepository interface {
@@ -23,12 +24,14 @@ type PullRequestRepository interface {
 	Create(ctx context.Context, pullRequest domain.PullRequest) (domain.PullRequest, error)
 	SetMergedStatus(ctx context.Context, statusId int, prId string) (SetMergedStatusDTO, error)
 	GetByPrIdWithReviewersIds(ctx context.Context, prId string) (GetByPrIdWithReviewersIdsDTO, error)
+	GetOpenPRsByReviewerIDs(ctx context.Context, prIds []string, statusId int) (map[string]GetOpenPRsByReviewerIDsDTO, error)
 }
 
 type PrReviewerRepository interface {
 	AddReviewers(ctx context.Context, pullRequestId string, reviewersId []string) error
 	GetPRByReviewer(ctx context.Context, userId string) (GetPRByReviewerDTO, error)
 	UpdateReviewer(ctx context.Context, oldUserId string, newUserId string, pullRequestId string) (string, error)
+	UpdateReviewers(ctx context.Context, changes map[string]PrReviewerChange) error
 }
 
 type StatusRepository interface {
