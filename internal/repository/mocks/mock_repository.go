@@ -57,6 +57,21 @@ func (mr *MockUserRepositoryMockRecorder) AddUsersToTeam(ctx, teamId, users any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUsersToTeam", reflect.TypeOf((*MockUserRepository)(nil).AddUsersToTeam), ctx, teamId, users)
 }
 
+// DeactivateUsers mocks base method.
+func (m *MockUserRepository) DeactivateUsers(ctx context.Context, ids []string) ([]domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeactivateUsers", ctx, ids)
+	ret0, _ := ret[0].([]domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeactivateUsers indicates an expected call of DeactivateUsers.
+func (mr *MockUserRepositoryMockRecorder) DeactivateUsers(ctx, ids any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateUsers", reflect.TypeOf((*MockUserRepository)(nil).DeactivateUsers), ctx, ids)
+}
+
 // GetById mocks base method.
 func (m *MockUserRepository) GetById(ctx context.Context, userId string) (domain.User, error) {
 	m.ctrl.T.Helper()
@@ -240,6 +255,21 @@ func (mr *MockPullRequestRepositoryMockRecorder) GetByPrIdWithReviewersIds(ctx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByPrIdWithReviewersIds", reflect.TypeOf((*MockPullRequestRepository)(nil).GetByPrIdWithReviewersIds), ctx, prId)
 }
 
+// GetOpenPRsByReviewerIDs mocks base method.
+func (m *MockPullRequestRepository) GetOpenPRsByReviewerIDs(ctx context.Context, prIds []string, statusId int) (map[string]repository.GetOpenPRsByReviewerIDsDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOpenPRsByReviewerIDs", ctx, prIds, statusId)
+	ret0, _ := ret[0].(map[string]repository.GetOpenPRsByReviewerIDsDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOpenPRsByReviewerIDs indicates an expected call of GetOpenPRsByReviewerIDs.
+func (mr *MockPullRequestRepositoryMockRecorder) GetOpenPRsByReviewerIDs(ctx, prIds, statusId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpenPRsByReviewerIDs", reflect.TypeOf((*MockPullRequestRepository)(nil).GetOpenPRsByReviewerIDs), ctx, prIds, statusId)
+}
+
 // SetMergedStatus mocks base method.
 func (m *MockPullRequestRepository) SetMergedStatus(ctx context.Context, statusId int, prId string) (repository.SetMergedStatusDTO, error) {
 	m.ctrl.T.Helper()
@@ -321,6 +351,20 @@ func (m *MockPrReviewerRepository) UpdateReviewer(ctx context.Context, oldUserId
 func (mr *MockPrReviewerRepositoryMockRecorder) UpdateReviewer(ctx, oldUserId, newUserId, pullRequestId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateReviewer", reflect.TypeOf((*MockPrReviewerRepository)(nil).UpdateReviewer), ctx, oldUserId, newUserId, pullRequestId)
+}
+
+// UpdateReviewers mocks base method.
+func (m *MockPrReviewerRepository) UpdateReviewers(ctx context.Context, changes map[string]repository.PrReviewerChange) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateReviewers", ctx, changes)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateReviewers indicates an expected call of UpdateReviewers.
+func (mr *MockPrReviewerRepositoryMockRecorder) UpdateReviewers(ctx, changes any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateReviewers", reflect.TypeOf((*MockPrReviewerRepository)(nil).UpdateReviewers), ctx, changes)
 }
 
 // MockStatusRepository is a mock of StatusRepository interface.
