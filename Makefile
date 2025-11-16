@@ -12,6 +12,9 @@ build:
 down:
 	$(COMPOSE) down
 
+test:
+	go test ./...
+
 clean:
 	$(COMPOSE) down -v
 
