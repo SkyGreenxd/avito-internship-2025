@@ -121,6 +121,9 @@ func TestTeamUseCase_AddTeam(t *testing.T) {
 
 			teamRepo := repoMocks.NewMockTeamRepository(ctrl)
 			userRepo := repoMocks.NewMockUserRepository(ctrl)
+			statusRepo := repoMocks.NewMockStatusRepository(ctrl)
+			reviewerRepo := repoMocks.NewMockPrReviewerRepository(ctrl)
+			prRepo := repoMocks.NewMockPullRequestRepository(ctrl)
 
 			mockTx := trMock.NewMockTx(ctrl)
 			mockTx.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
@@ -132,7 +135,7 @@ func TestTeamUseCase_AddTeam(t *testing.T) {
 				Return(mockTx, nil).
 				AnyTimes()
 
-			teamUC := NewTeamUseCase(teamRepo, userRepo, mockTxPool)
+			teamUC := NewTeamUseCase(teamRepo, userRepo, prRepo, statusRepo, mockTxPool, reviewerRepo)
 			tt.teamRepoSetup(teamRepo)
 			tt.userRepoSetup(userRepo)
 
@@ -212,6 +215,9 @@ func TestTeamUseCase_GetTeam(t *testing.T) {
 
 			teamRepo := repoMocks.NewMockTeamRepository(ctrl)
 			userRepo := repoMocks.NewMockUserRepository(ctrl)
+			statusRepo := repoMocks.NewMockStatusRepository(ctrl)
+			reviewerRepo := repoMocks.NewMockPrReviewerRepository(ctrl)
+			prRepo := repoMocks.NewMockPullRequestRepository(ctrl)
 
 			mockTx := trMock.NewMockTx(ctrl)
 			mockTx.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
@@ -223,7 +229,7 @@ func TestTeamUseCase_GetTeam(t *testing.T) {
 				Return(mockTx, nil).
 				AnyTimes()
 
-			teamUC := NewTeamUseCase(teamRepo, userRepo, mockTxPool)
+			teamUC := NewTeamUseCase(teamRepo, userRepo, prRepo, statusRepo, mockTxPool, reviewerRepo)
 			tt.teamRepoSetup(teamRepo)
 
 			res, err := teamUC.GetTeam(context.Background(), tt.input)
