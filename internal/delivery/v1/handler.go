@@ -29,6 +29,7 @@ func (h *Handler) Init(r *gin.Engine) {
 	{
 		team.POST("/add", h.addTeam)
 		team.GET("/get", h.getTeam)
+		team.POST("/deactivate", h.deactivateMembers)
 	}
 
 	users := r.Group("/users")

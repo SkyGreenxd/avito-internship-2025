@@ -4,8 +4,9 @@ import "fmt"
 
 var (
 	// Ошибки с командами
-	ErrTeamIsExists = fmt.Errorf("team_name already exists")
-	ErrTeamNotFound = fmt.Errorf("team not found")
+	ErrTeamIsExists  = fmt.Errorf("team_name already exists")
+	ErrTeamNotFound  = fmt.Errorf("team not found")
+	ErrInvalidMember = fmt.Errorf("not all members are on the team")
 
 	// Ошибки с пользователями
 	ErrUserNotFound = fmt.Errorf("user not found")
