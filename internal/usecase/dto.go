@@ -59,6 +59,17 @@ type GetTeamRes struct {
 	Members  []TeamMemberDTO
 }
 
+type DeactivateMembersReq struct {
+	TeamName string
+	Members  []string
+}
+
+type DeactivateMembersRes struct {
+	TeamName           string
+	DeactivatedMembers []TeamMemberDTO
+	UpdPrs             []PullRequestDTO
+}
+
 type SetIsActiveReq struct {
 	UserId   string
 	IsActive bool
@@ -224,4 +235,12 @@ func NewPullRequestMergeRes(pr PullRequestDTO) PullRequestMergeRes {
 
 func NewGetTeamRes(teamDTO TeamDTO) GetTeamRes {
 	return GetTeamRes(teamDTO)
+}
+
+func NewDeactivateMembersRes(teamName string, members []TeamMemberDTO, prs []PullRequestDTO) DeactivateMembersRes {
+	return DeactivateMembersRes{
+		TeamName:           teamName,
+		DeactivatedMembers: members,
+		UpdPrs:             prs,
+	}
 }

@@ -119,3 +119,14 @@ type GetReviewRes struct {
 	UserId       string             `json:"user_id"`
 	PullRequests []PullRequestShort `json:"pull_requests"`
 }
+
+type DeactivateMembersReq struct {
+	TeamName string   `json:"team_name" binding:"required"`
+	Members  []string `json:"members" binding:"required,dive"`
+}
+
+type DeactivateMembersRes struct {
+	TeamName           string           `json:"team_name"`
+	DeactivatedMembers []TeamMemberDTO  `json:"deactivated_members"`
+	UpdPrs             []PullRequestDTO `json:"upd_prs"`
+}

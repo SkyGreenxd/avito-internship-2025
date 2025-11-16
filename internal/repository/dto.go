@@ -7,6 +7,17 @@ type SetMergedStatusDTO struct {
 	ReviewersIds []string
 }
 
+type PrReviewerChange struct {
+	ToAdd    []string
+	ToRemove []string
+}
+
+type GetOpenPRsByReviewerIDsDTO struct {
+	Pr           domain.PullRequest
+	ReviewersIds []string
+	StatusName   string
+}
+
 type GetByPrIdWithReviewersIdsDTO struct {
 	Pr           domain.PullRequest
 	ReviewersIds []string
