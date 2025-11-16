@@ -34,7 +34,6 @@ func NewTeamUseCase(teamRepo r.TeamRepository, userRepo r.UserRepository,
 	}
 }
 
-// AddTeam создает новую команду с участниками
 func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, error) {
 	const op = "TeamUseCase.AddTeam"
 
@@ -73,7 +72,6 @@ func (t *TeamUseCase) AddTeam(ctx context.Context, req TeamAddReq) (TeamAddRes, 
 	return NewTeamAddRes(teamDTO), nil
 }
 
-// GetTeam возвращает команду с ее участниками
 func (t *TeamUseCase) GetTeam(ctx context.Context, teamName string) (GetTeamRes, error) {
 	const op = "TeamUseCase.GetTeam"
 

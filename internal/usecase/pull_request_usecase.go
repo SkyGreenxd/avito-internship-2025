@@ -35,7 +35,6 @@ func NewPullRequestUseCase(prRepo r.PullRequestRepository, reviewerRepo r.PrRevi
 	}
 }
 
-// PullRequestCreate создает PR и назначает до maxReviewers ревьюеров
 func (p *PullRequestUseCase) PullRequestCreate(ctx context.Context, req CreatePullRequestReq) (CreatePullRequestRes, error) {
 	const op = "PullRequestUseCase.PullRequestCreate"
 

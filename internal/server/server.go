@@ -22,12 +22,10 @@ type Config struct {
 	KeepAlive    time.Duration
 }
 
-// Server обёртка над http.Server для запуска и остановки HTTP-сервиса.
 type Server struct {
 	httpServer *http.Server
 }
 
-// LoadHttpServerConfig загружает конфигурацию HTTP-сервера из переменных окружения
 func LoadHttpServerConfig(logger logger.Logger) Config {
 	port := os.Getenv("HTTP_PORT")
 	if port == "" {
@@ -43,7 +41,6 @@ func LoadHttpServerConfig(logger logger.Logger) Config {
 	}
 }
 
-// NewServer создаёт новый HTTP-сервер с заданным обработчиком и конфигурацией.
 func NewServer(handler http.Handler, httpServer Config) *Server {
 	return &Server{
 		httpServer: &http.Server{
@@ -64,7 +61,6 @@ func (s *Server) Stop(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }
 
-// getEnvAsDuration вспомогательная функция для парсинга duration
 func getEnvAsDuration(key string, fallback time.Duration, logger logger.Logger) time.Duration {
 	valStr := os.Getenv(key)
 	if valStr == "" {

@@ -36,8 +36,6 @@ func (l *SlogLogger) Debugf(format string, args ...any) {
 	l.logger.Debug(fmt.Sprintf(format, args...))
 }
 
-// Track выполняет переданную функцию, которая может вернуть ошибку,
-// замеряет время выполнения и логирует результат.
 func (l *SlogLogger) Track(operationName string, operation func() error) error {
 	start := time.Now()
 

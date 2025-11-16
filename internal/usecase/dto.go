@@ -145,7 +145,6 @@ func toArrPullRequestShort(prs r.GetPRByReviewerDTO) []PullRequestShort {
 	return result
 }
 
-// TODO: переделать
 func toPullRequestShort(pr domain.PullRequest, statusName domain.PRStatus) PullRequestShort {
 	return PullRequestShort{
 		Id:       pr.Id,

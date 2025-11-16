@@ -20,7 +20,6 @@ func NewUserUseCase(reviewerRepo r.PrReviewerRepository, userRepo r.UserReposito
 	}
 }
 
-// SetIsActive меняет статус активности пользователя
 func (u *UserUseCase) SetIsActive(ctx context.Context, req SetIsActiveReq) (SetIsActiveRes, error) {
 	const op = "UserUseCase.SetIsActive"
 
@@ -37,7 +36,6 @@ func (u *UserUseCase) SetIsActive(ctx context.Context, req SetIsActiveReq) (SetI
 	return NewSetIsActiveRes(updUser.Id, updUser.Name, team.Name, updUser.IsActive), nil
 }
 
-// GetReview возвращает список PR'ов, где пользователь назначен ревьюером
 func (u *UserUseCase) GetReview(ctx context.Context, userId string) (GetReviewRes, error) {
 	const op = "UserUseCase.GetReview"
 
