@@ -1,9 +1,7 @@
 package v1
 
 import (
-	"avito-internship/pkg/e"
 	"avito-internship/pkg/logger"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
