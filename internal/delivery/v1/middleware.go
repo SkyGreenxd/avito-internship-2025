@@ -53,8 +53,8 @@ func (m *Middleware) ErrorMiddleware() gin.HandlerFunc {
 	}
 }
 
-func abortUnauthorized(c *gin.Context) {
-	response := NewErrorResponse(e.NOT_FOUND, e.ErrResourceNotFound.Error())
-	c.JSON(http.StatusUnauthorized, response)
-	c.Abort()
-}
+//func abortUnauthorized(c *gin.Context) {
+//	response := NewErrorResponse(e.NOT_FOUND, e.ErrResourceNotFound.Error())
+//	c.JSON(http.StatusUnauthorized, response)
+//	c.Abort()
+//}
