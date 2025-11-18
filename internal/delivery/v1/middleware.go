@@ -4,7 +4,6 @@ import (
 	"avito-internship/pkg/e"
 	"avito-internship/pkg/logger"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
