@@ -29,12 +29,12 @@ func (h *Handler) Init(r *gin.Engine) {
 	{
 		team.POST("/add", h.addTeam)
 		team.GET("/get", h.getTeam)
-		team.POST("/deactivate", h.middleware.AdminMiddleware(), h.deactivateMembers)
+		team.POST("/deactivate", h.deactivateMembers)
 	}
 
 	users := r.Group("/users")
 	{
-		users.POST("/setIsActive", h.middleware.AdminMiddleware(), h.setIsActive)
+		users.POST("/setIsActive", h.setIsActive)
 		users.GET("/getReview", h.getReview)
 	}
 

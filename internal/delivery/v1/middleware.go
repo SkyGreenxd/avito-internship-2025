@@ -21,21 +21,21 @@ func NewMiddleware(logger logger.Logger, adminToken string) *Middleware {
 	}
 }
 
-func (m *Middleware) AdminMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		const prefix = "Bearer "
-		authHeader := c.GetHeader("Authorization")
-		token := strings.TrimPrefix(authHeader, prefix)
-
-		if !strings.HasPrefix(authHeader, prefix) || token != m.adminToken {
-			m.logger.Errorf(e.ErrUnauthorized, "method=%s path=%s", c.Request.Method, c.Request.URL.Path)
-			abortUnauthorized(c)
-			return
-		}
-
-		c.Next()
-	}
-}
+//func (m *Middleware) AdminMiddleware() gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		const prefix = "Bearer "
+//		authHeader := c.GetHeader("Authorization")
+//		token := strings.TrimPrefix(authHeader, prefix)
+//
+//		if !strings.HasPrefix(authHeader, prefix) || token != m.adminToken {
+//			m.logger.Errorf(e.ErrUnauthorized, "method=%s path=%s", c.Request.Method, c.Request.URL.Path)
+//			abortUnauthorized(c)
+//			return
+//		}
+//
+//		c.Next()
+//	}
+//}
 
 func (m *Middleware) ErrorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
